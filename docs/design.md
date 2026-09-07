@@ -2,7 +2,8 @@
 
 ## Fixed decisions (from the brief)
 
-- Flutter latest stable; plain widgets + implicit/explicit animations. No Flame.
+- Flutter latest stable, targeting **iOS and Android**; plain widgets +
+  implicit/explicit animations. No Flame.
 - No state-management package: engine state is immutable, UI holds `GameState`
   in a `ValueNotifier` + `ValueListenableBuilder`.
 - Layout: `app/` (Flutter), `packages/game_core/` and `packages/bird_sort/`
