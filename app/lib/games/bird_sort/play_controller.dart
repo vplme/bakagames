@@ -48,6 +48,9 @@ class PlayController extends ChangeNotifier {
   int shakeTick = 0;
   int? shakeBranch;
 
+  /// The extra-branch booster is once per level; restart does not refund it.
+  bool extraBranchUsed = false;
+
   final List<_Snapshot> _undoStack = [];
 
   PlayController(this.level) {
@@ -121,7 +124,7 @@ class PlayController extends ChangeNotifier {
 
     // The engine emptied the destination → that flock flew away.
     if (next.branches[move.to].isEmpty) {
-      final info = DepartureInfo(move.to, level.branches[move.to].side);
+      final info = DepartureInfo(move.to, state.branches[move.to].side);
       departed = Map.of(departed);
       var i = 0;
       for (final uid in birdIds[move.to]) {
@@ -132,6 +135,19 @@ class PlayController extends ChangeNotifier {
     }
 
     state = next;
+    selected = null;
+    notifyListeners();
+  }
+
+  /// The "extra branch" booster. No-op when already used or won.
+  void useExtraBranch() {
+    if (extraBranchUsed || state.isWon) return;
+    _undoStack.add(_Snapshot(birdIds, departed));
+    state = engine.addEmptyBranch(state);
+    birdIds = [...birdIds, <int>[]];
+    extraBranchUsed = true;
+    transitionTick++;
+    staggerOf = {};
     selected = null;
     notifyListeners();
   }

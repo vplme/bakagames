@@ -75,7 +75,7 @@ void main() {
         home: BirdSortPlayScreen(
           levelIndex: 0,
           debugLevel: tinyLevel(),
-          onWon: (m) => wonMoves = m,
+          onWon: (i, m) => wonMoves = m,
         ),
       ));
       await tester.pumpAndSettle();
@@ -128,4 +128,49 @@ void main() {
       expect(find.text('Moves: 0'), findsOneWidget);
     });
   });
+
+  group('boosters', () {
+    test('extra branch: adds one empty branch, once per level, undoable', () {
+      final c = PlayController(tinyLevel());
+      expect(c.birdIds, hasLength(3));
+      c.useExtraBranch();
+      expect(c.birdIds, hasLength(4));
+      expect(c.state.branches, hasLength(4));
+      expect(c.extraBranchUsed, isTrue);
+      c.useExtraBranch(); // second use is a no-op
+      expect(c.birdIds, hasLength(4));
+      c.undoMove(); // booster is a history transition
+      expect(c.birdIds, hasLength(3));
+      expect(c.state.branches, hasLength(3));
+      expect(c.extraBranchUsed, isTrue); // not refunded
+    });
+
+    testWidgets('hint solves in an isolate and plays the move',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: BirdSortPlayScreen(levelIndex: 0, debugLevel: tinyLevel()),
+      ));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.lightbulb_outline));
+      await tester.pump();
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 500)));
+      await tester.pumpAndSettle();
+      // tinyLevel is one move from won: the hint plays it.
+      expect(find.text('Level 1 complete!'), findsOneWidget);
+    });
+
+    testWidgets('+ Branch button adds a branch and disables itself',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: BirdSortPlayScreen(levelIndex: 0, debugLevel: tinyLevel()),
+      ));
+      await tester.pumpAndSettle();
+      final button = find.widgetWithIcon(IconButton, Icons.park_outlined);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(tester.widget<IconButton>(button).onPressed, isNull);
+    });
+  });
 }
+

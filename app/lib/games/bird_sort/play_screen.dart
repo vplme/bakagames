@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'package:bird_sort/bird_sort.dart' as engine;
 import 'package:flutter/material.dart';
 
+import '../../shell/settings.dart';
 import 'board.dart';
 import 'play_controller.dart';
 
@@ -14,13 +15,17 @@ class BirdSortPlayScreen extends StatefulWidget {
   final int levelIndex;
   final engine.Level? debugLevel;
 
-  /// Called once when the level is won, with the move count used.
-  final void Function(int moves)? onWon;
+  /// Haptics/sound; optional so tests can omit it.
+  final AppSettings? settings;
+
+  /// Called once per win with the level index and move count used.
+  final void Function(int levelIndex, int moves)? onWon;
 
   const BirdSortPlayScreen({
     super.key,
     required this.levelIndex,
     this.debugLevel,
+    this.settings,
     this.onWon,
   });
 
@@ -32,6 +37,9 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
   late final Future<engine.Level> _levelFuture;
   PlayController? _controller;
   bool _winHandled = false;
+  bool _hintRunning = false;
+  int _lastShakeTick = 0;
+  int _lastTransitionTick = 0;
 
   @override
   void initState() {
@@ -59,9 +67,17 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
 
   void _onGameChanged() {
     final c = _controller!;
+    if (c.shakeTick != _lastShakeTick) {
+      _lastShakeTick = c.shakeTick;
+      widget.settings?.hapticError();
+    }
+    if (c.transitionTick != _lastTransitionTick) {
+      _lastTransitionTick = c.transitionTick;
+      widget.settings?.hapticTap();
+    }
     if (c.state.isWon && !_winHandled) {
       _winHandled = true;
-      widget.onWon?.call(c.moveCount);
+      widget.onWon?.call(widget.levelIndex, c.moveCount);
       // Let the flock finish flying before celebrating.
       Future.delayed(const Duration(milliseconds: 700), () {
         if (mounted) _showWinSheet();
@@ -94,6 +110,7 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                   Navigator.of(context).pushReplacement(MaterialPageRoute(
                     builder: (_) => BirdSortPlayScreen(
                       levelIndex: widget.levelIndex + 1,
+                      settings: widget.settings,
                       onWon: widget.onWon,
                     ),
                   ));
@@ -178,7 +195,28 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
     );
   }
 
+  /// The hint booster: solver runs in an isolate, spinner while it thinks,
+  /// then the suggested move is played.
+  Future<void> _hint(PlayController controller) async {
+    if (_hintRunning || controller.state.isWon) return;
+    setState(() => _hintRunning = true);
+    final snapshot = engine.stripHistory(controller.state);
+    final result = await _solveInIsolate(snapshot);
+    if (!mounted) return;
+    setState(() => _hintRunning = false);
+    // Ignore a stale result if the position changed while solving
+    // (GameState equality compares positions, not histories).
+    if (controller.state != snapshot) return;
+    if (!result.solvable || result.moves.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('No solution from here — try undoing.')));
+      return;
+    }
+    controller.applyExternalMove(result.moves.first);
+  }
+
   Widget _controls(PlayController controller) {
+    final won = controller.state.isWon;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
       child: Row(
@@ -195,6 +233,26 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
             onPressed:
                 controller.canUndo ? controller.restartLevel : null,
           ),
+          _ControlButton(
+            icon: Icons.park_outlined,
+            label: '+ Branch',
+            onPressed: controller.extraBranchUsed || won
+                ? null
+                : controller.useExtraBranch,
+          ),
+          _hintRunning
+              ? const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.5)),
+                )
+              : _ControlButton(
+                  icon: Icons.lightbulb_outline,
+                  label: 'Hint',
+                  onPressed: won ? null : () => _hint(controller),
+                ),
           Text('Moves: ${controller.moveCount}',
               style: Theme.of(context).textTheme.titleMedium),
         ],
@@ -202,6 +260,12 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
     );
   }
 }
+
+/// Top-level so the isolate closure captures only [snapshot] — a closure
+/// created inside the State would drag the whole surrounding context
+/// (including unsendable futures) into the isolate message.
+Future<engine.SolveResult> _solveInIsolate(engine.GameState snapshot) =>
+    Isolate.run(() => engine.solve(snapshot));
 
 class _ControlButton extends StatelessWidget {
   final IconData icon;

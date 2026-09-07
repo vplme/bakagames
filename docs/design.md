@@ -81,6 +81,33 @@
 - Difficulty tier table in code maps index ranges → params; easy to edit.
 - `levelFor(index)`: seed = splitmix64(index).
 
+## UI decisions (phases 3–4)
+
+- **Bird identity**: the engine deals in colour ids only; the UI keeps a
+  mirror of stable per-bird uids (`PlayController.birdIds`) updated in
+  lockstep with every engine transition. The whole tree renders as one Stack
+  of `AnimatedPositioned` birds keyed by uid, which makes cross-branch
+  flight, staggering (per-bird `Interval` curves), flock departure and undo
+  animation fall out of the layout for free.
+- **Extra-branch booster** is an engine transition (`addEmptyBranch`) that
+  pushes onto history like a move: undo can revert it (the booster is *not*
+  refunded — once per level attempt), restart returns to the original level
+  without the branch. The board reads sides/capacity from the current state,
+  never the initial level, since the branch count can grow mid-level.
+- **Hint** applies the solver's first move. It solves a history-stripped
+  snapshot in `Isolate.run` (closure hoisted to a top-level function —
+  a closure created inside the State over-captures unsendable context),
+  discards stale results if the position changed meanwhile, and shows a
+  "no solution from here" snackbar on unsolvable/unknown.
+- **Win callback** is `onWon(levelIndex, moves)` so the "next level" chain
+  from the win sheet keeps saving progress for the right level.
+- **Dev-dependency judgment call**: `shared_preferences_platform_interface`
+  (dev only) is used to back `SharedPreferencesAsync` with the in-memory
+  store in tests. Treated as part of the already-approved
+  `shared_preferences` (same plugin, same authors, test-only); flagged here
+  per the working agreement.
+- Sound is a persisted toggle with no audio behind it yet, per the brief.
+
 ## Tier tuning report (generator_test.dart, first 200 levels)
 
 ```

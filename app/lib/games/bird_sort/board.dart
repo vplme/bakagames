@@ -63,7 +63,7 @@ class _BirdSortBoardState extends State<BirdSortBoard>
     final c = widget.controller;
     final state = c.state;
     final branches = state.branches;
-    final capacity = c.level.capacity;
+    final capacity = state.level.capacity;
 
     final rows = branches.length;
     final rowH = ((size.height - 24) / rows).clamp(48.0, 110.0);
@@ -82,7 +82,7 @@ class _BirdSortBoardState extends State<BirdSortBoard>
     // Bird slot origin (top-left) for branch i, slot s (0 = trunk-most).
     Offset slotOrigin(int i, int s) {
       final y = barY(i) - birdSize;
-      final side = c.level.branches[i].side;
+      final side = branches[i].side;
       return side == engine.Side.left
           ? Offset(centerX - trunkW / 2 - (s + 1) * birdSize, y)
           : Offset(centerX + trunkW / 2 + s * birdSize, y);
@@ -112,7 +112,7 @@ class _BirdSortBoardState extends State<BirdSortBoard>
     // Branch bars (under the birds).
     for (var i = 0; i < rows; i++) {
       final branch = branches[i];
-      final side = c.level.branches[i].side;
+      final side = branch.side;
       final barLen = birdSize * capacity + birdSize * 0.35;
       final left = side == engine.Side.left
           ? centerX - trunkW / 2 - barLen
@@ -157,7 +157,7 @@ class _BirdSortBoardState extends State<BirdSortBoard>
     }
 
     for (var i = 0; i < rows; i++) {
-      final side = c.level.branches[i].side;
+      final side = branches[i].side;
       for (var s = 0; s < c.birdIds[i].length; s++) {
         final uid = c.birdIds[i][s];
         final o = slotOrigin(i, s);
@@ -193,7 +193,7 @@ class _BirdSortBoardState extends State<BirdSortBoard>
     // Tap areas: whole half-row per branch (bar + birds + empty space).
     for (var i = 0; i < rows; i++) {
       if (branches[i].removed) continue;
-      final side = c.level.branches[i].side;
+      final side = branches[i].side;
       children.add(Positioned(
         left: side == engine.Side.left ? 0 : centerX,
         top: rowTop(i),

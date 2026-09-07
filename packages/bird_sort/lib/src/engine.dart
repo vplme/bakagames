@@ -193,3 +193,28 @@ GameState stripHistory(GameState state) => state.history.isEmpty
         isWon: state.isWon,
         isStuck: state.isStuck,
       );
+
+/// The "extra branch" booster: appends one empty branch (side alternating
+/// with the current branch count) as an undoable transition — the prior
+/// state is pushed onto history like a move. Restart still returns to the
+/// original level without the extra branch.
+GameState addEmptyBranch(GameState state) {
+  final side = state.branches.length.isEven ? Side.left : Side.right;
+  final extra = Branch(side: side, birds: const []);
+  final level = Level(
+    capacity: state.level.capacity,
+    branches: [...state.level.branches, extra],
+    removeBranchOnComplete: state.level.removeBranchOnComplete,
+    partialMovesAllowed: state.level.partialMovesAllowed,
+    seed: state.level.seed,
+  );
+  final branches = [...state.branches, extra];
+  final won = _computeWon(branches);
+  return GameState._(
+    level: level,
+    branches: branches,
+    history: [...state.history, state],
+    isWon: won,
+    isStuck: !won && _computeStuck(level, branches),
+  );
+}

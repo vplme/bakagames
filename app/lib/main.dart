@@ -1,13 +1,34 @@
 import 'package:flutter/material.dart';
 
-import 'games/bird_sort/play_screen.dart';
+import 'games/bird_sort/bird_sort_game.dart';
+import 'shell/home_screen.dart';
+import 'shell/progress_store.dart';
+import 'shell/registry.dart';
+import 'shell/settings.dart';
 
-void main() {
-  runApp(const BakaGamesApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final settings = AppSettings();
+  await settings.load();
+  final store = SharedPrefsProgressStore();
+  final registry = GameRegistry([
+    birdSortEntry(store: store, settings: settings),
+    // Future games: add one entry here.
+  ]);
+  runApp(BakaGamesApp(registry: registry, store: store, settings: settings));
 }
 
 class BakaGamesApp extends StatelessWidget {
-  const BakaGamesApp({super.key});
+  final GameRegistry registry;
+  final SharedPrefsProgressStore store;
+  final AppSettings settings;
+
+  const BakaGamesApp({
+    super.key,
+    required this.registry,
+    required this.store,
+    required this.settings,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +38,7 @@ class BakaGamesApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
         useMaterial3: true,
       ),
-      // Phase 3: straight into Bird Sort. Phase 4 replaces this with the
-      // shell home screen.
-      home: const BirdSortPlayScreen(levelIndex: 0),
+      home: HomeScreen(registry: registry, store: store, settings: settings),
     );
   }
 }

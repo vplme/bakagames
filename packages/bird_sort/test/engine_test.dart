@@ -235,4 +235,33 @@ void main() {
       expect(() => b([1]).birds.add(2), throwsUnsupportedError);
     });
   });
+
+  group('addEmptyBranch (extra-branch booster)', () {
+    test('appends an empty usable branch, alternating side', () {
+      final s = GameState.initial(level([
+        b([1, 2, 1, 2]),
+        b([2, 1, 2, 1]),
+      ], capacity: 4));
+      expect(s.isStuck, isTrue);
+      final s2 = addEmptyBranch(s);
+      expect(s2.branches, hasLength(3));
+      expect(s2.branches.last.isEmpty, isTrue);
+      expect(s2.branches.last.side, Side.left);
+      expect(s2.isStuck, isFalse); // tip can now move somewhere real
+      expect(s2.level.branches, hasLength(3));
+      // It is a real move target.
+      final s3 = applyMove(s2, const Move(from: 0, to: 2, count: 1));
+      expect(s3.branches[2].birds, [2]);
+    });
+
+    test('is undoable and restart drops the extra branch', () {
+      final s = GameState.initial(level([b([1, 1, 1]), b([1])]));
+      final s2 = addEmptyBranch(s);
+      expect(undo(s2), equals(s));
+      final s3 = applyMove(s2, const Move(from: 1, to: 2, count: 1));
+      expect(restart(s3), equals(s));
+      expect(restart(s3).branches, hasLength(2));
+    });
+  });
 }
+
