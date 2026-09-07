@@ -81,6 +81,21 @@
 - Difficulty tier table in code maps index ranges → params; easy to edit.
 - `levelFor(index)`: seed = splitmix64(index).
 
+## Tier tuning report (generator_test.dart, first 200 levels)
+
+```
+tier      levels  reject-rate  avg-nodes  max-nodes  avg-optimal
+3c/2e     10      9.1%         14         31         9.3
+4c/2e     10      0.0%         18         36         12.7
+5c/2e     10      0.0%         20         36         16.0
+5c/1e/rm  30      77.8%        26         52         15.0
+6c/1e/rm  140     93.0%        35         108        18.9
+```
+
+Removal tiers reject far more often (as expected — mostly "shorter than
+`minOptimalMoves`" plus genuinely unsolvable 1-empty deals), but node counts
+are tiny, so even a 93% rejection rate (~14 deals/level) generates instantly.
+
 ## Open questions
 
 *(none currently — anything ambiguous gets logged here before guessing)*

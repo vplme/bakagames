@@ -180,3 +180,16 @@ bool _computeStuck(Level level, List<Branch> branches) {
   }
   return true;
 }
+
+/// Same position with an empty history. Used by the solver so search nodes
+/// don't accumulate O(depth) history lists; the position itself (and thus
+/// equality) is unchanged.
+GameState stripHistory(GameState state) => state.history.isEmpty
+    ? state
+    : GameState._(
+        level: state.level,
+        branches: state.branches,
+        history: const [],
+        isWon: state.isWon,
+        isStuck: state.isStuck,
+      );
