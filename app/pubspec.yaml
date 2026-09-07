@@ -1,0 +1,22 @@
+name: baka_games
+description: "Baka Games — small puzzle games. First up: Bird Sort."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  game_core:
+    path: ../packages/game_core
+  bird_sort:
+    path: ../packages/bird_sort
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
