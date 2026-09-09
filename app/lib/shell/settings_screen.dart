@@ -14,11 +14,21 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         children: [
           ValueListenableBuilder<bool>(
+            valueListenable: settings.reducedMotion,
+            builder: (context, on, _) => SwitchListTile(
+              secondary: const Icon(Icons.motion_photos_off_outlined),
+              title: const Text('Reduced motion'),
+              subtitle: const Text('Still birds and instant moves'),
+              value: on,
+              onChanged: settings.setReducedMotion,
+            ),
+          ),
+          ValueListenableBuilder<bool>(
             valueListenable: settings.soundOn,
             builder: (context, on, _) => SwitchListTile(
               secondary: const Icon(Icons.volume_up),
               title: const Text('Sound'),
-              subtitle: const Text('Sound effects (coming soon)'),
+              subtitle: const Text('Gentle bird calls and flock celebrations'),
               value: on,
               onChanged: settings.setSound,
             ),

@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Level tinyLevel({bool remove = false}) => Level(
-      capacity: 4,
-      branches: [
-        Branch(side: Side.left, birds: const [1, 1, 1]),
-        Branch(side: Side.right, birds: const [1]),
-        Branch(side: Side.left, birds: const []),
-      ],
-      removeBranchOnComplete: remove,
-      partialMovesAllowed: true,
-    );
+  capacity: 4,
+  branches: [
+    Branch(side: Side.left, birds: const [1, 1, 1]),
+    Branch(side: Side.right, birds: const [1]),
+    Branch(side: Side.left, birds: const []),
+  ],
+  removeBranchOnComplete: remove,
+  partialMovesAllowed: true,
+);
 
 void main() {
   group('PlayController', () {
@@ -30,14 +30,16 @@ void main() {
     });
 
     test('invalid tap shakes, selection cleared', () {
-      final c = PlayController(Level(
-        capacity: 4,
-        branches: [
-          Branch(side: Side.left, birds: const [1]),
-          Branch(side: Side.right, birds: const [2, 2, 2, 2]),
-        ],
-        removeBranchOnComplete: false,
-      ));
+      final c = PlayController(
+        Level(
+          capacity: 4,
+          branches: [
+            Branch(side: Side.left, birds: const [1]),
+            Branch(side: Side.right, birds: const [2, 2, 2, 2]),
+          ],
+          removeBranchOnComplete: false,
+        ),
+      );
       c.tapBranch(0);
       final tick = c.shakeTick;
       c.tapBranch(1); // full target → invalid
@@ -68,36 +70,30 @@ void main() {
   });
 
   group('BirdSortPlayScreen', () {
-    testWidgets('renders board, plays to a win, shows win sheet',
-        (tester) async {
+    testWidgets('renders board, plays to a win, shows win sheet', (
+      tester,
+    ) async {
       int? wonMoves;
-      await tester.pumpWidget(MaterialApp(
-        home: BirdSortPlayScreen(
-          levelIndex: 0,
-          debugLevel: tinyLevel(),
-          onWon: (i, m) => wonMoves = m,
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: BirdSortPlayScreen(
+            levelIndex: 0,
+            debugLevel: tinyLevel(),
+            onWon: (i, m) => wonMoves = m,
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
       expect(find.text('Level 1'), findsOneWidget);
       expect(find.text('Moves: 0'), findsOneWidget);
 
-      // Tap branch 1 (right side), then branch 0 (left side) → win.
-      final size = tester.getSize(find.byType(Scaffold));
-      final boardTop = tester.getTopLeft(find.text('Moves: 0')).dy;
-      // Branch rows: 3 rows over the board area. Tap by hitting the row's
-      // half: row 1 is right side, row 0 left side.
-      final board = find.byWidgetPredicate(
-          (w) => w.runtimeType.toString() == 'BirdSortBoard');
-      final boardRect = tester.getRect(board);
-      final rowH = boardRect.height.clamp(0, boardTop) / 3;
-      Offset rowCenter(int row, bool left) => Offset(
-          left ? size.width * 0.25 : size.width * 0.75,
-          boardRect.top + rowH * (row + 0.5));
-
-      await tester.tapAt(rowCenter(1, false)); // select source
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.tapAt(rowCenter(0, true)); // target → completes
+      await tester.tap(find.byKey(const ValueKey('branch1')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('branch0')));
       await tester.pumpAndSettle();
 
       expect(wonMoves, 1);
@@ -106,20 +102,22 @@ void main() {
     });
 
     testWidgets('undo button reverts a move', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: BirdSortPlayScreen(levelIndex: 4, debugLevel: tinyLevel()),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: BirdSortPlayScreen(levelIndex: 4, debugLevel: tinyLevel()),
+        ),
+      );
       await tester.pumpAndSettle();
       final undo = find.widgetWithIcon(IconButton, Icons.undo);
       expect(tester.widget<IconButton>(undo).onPressed, isNull);
 
-      final board = find.byType(BirdSortPlayScreen);
-      final rect = tester.getRect(board);
-      // Select row 0 (left), move to row 2 (left, empty).
-      // Rows are inside the board area; approximate via screen thirds.
-      await tester.tapAt(Offset(rect.width * 0.25, rect.height * 0.30));
-      await tester.pump(const Duration(milliseconds: 60));
-      await tester.tapAt(Offset(rect.width * 0.25, rect.height * 0.62));
+      await tester.tap(find.byKey(const ValueKey('branch0')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('branch2')));
       await tester.pumpAndSettle();
       expect(find.text('Moves: 1'), findsOneWidget);
 
@@ -145,26 +143,39 @@ void main() {
       expect(c.extraBranchUsed, isTrue); // not refunded
     });
 
-    testWidgets('hint solves in an isolate and plays the move',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: BirdSortPlayScreen(levelIndex: 0, debugLevel: tinyLevel()),
-      ));
+    testWidgets('hint solves in an isolate and plays the move', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: BirdSortPlayScreen(levelIndex: 0, debugLevel: tinyLevel()),
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.lightbulb_outline));
       await tester.pump();
       await tester.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 500)));
+        () => Future<void>.delayed(const Duration(milliseconds: 500)),
+      );
       await tester.pumpAndSettle();
       // tinyLevel is one move from won: the hint plays it.
       expect(find.text('Level 1 complete!'), findsOneWidget);
     });
 
-    testWidgets('+ Branch button adds a branch and disables itself',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: BirdSortPlayScreen(levelIndex: 0, debugLevel: tinyLevel()),
-      ));
+    testWidgets('+ Branch button adds a branch and disables itself', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: BirdSortPlayScreen(levelIndex: 0, debugLevel: tinyLevel()),
+        ),
+      );
       await tester.pumpAndSettle();
       final button = find.widgetWithIcon(IconButton, Icons.park_outlined);
       await tester.tap(button);
@@ -173,4 +184,3 @@ void main() {
     });
   });
 }
-

@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:game_core/game_core.dart';
 
-import '../../shell/level_select_screen.dart';
+import 'level_select_screen.dart';
+import 'aviary_home_screen.dart';
+import 'aviary_preview.dart';
 import '../../shell/registry.dart';
 import '../../shell/settings.dart';
 import 'play_screen.dart';
@@ -11,7 +13,7 @@ class BirdSortDefinition implements GameDefinition {
   String get id => 'bird_sort';
 
   @override
-  String get title => 'Bird Sort';
+  String get title => 'Pocket Aviary';
 
   @override
   String get iconName => 'bird';
@@ -34,18 +36,27 @@ GameEntry birdSortEntry({
   }
 
   Widget buildPlay(BuildContext context, int levelIndex) => BirdSortPlayScreen(
-        levelIndex: levelIndex,
-        settings: settings,
-        onWon: saveWin,
-      );
+    levelIndex: levelIndex,
+    settings: settings,
+    onWon: saveWin,
+    store: store,
+  );
 
-  return GameEntry(
+  late final GameEntry entry;
+  entry = GameEntry(
     definition: definition,
+    category: 'Color sorting',
+    subtitle: 'Bring tiny flocks together in a lush little world.',
+    accentColor: const Color(0xFF386B55),
+    buildPreview: (_) => const AviaryPreview(),
+    buildHomeScreen: (_) =>
+        AviaryHomeScreen(entry: entry, store: store, settings: settings),
     buildPlayScreen: buildPlay,
-    buildLevelSelect: (context) => LevelSelectScreen(
+    buildLevelSelect: (context) => AviaryLevelSelectScreen(
       definition: definition,
       store: store,
       buildPlayScreen: buildPlay,
     ),
   );
+  return entry;
 }

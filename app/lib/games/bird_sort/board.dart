@@ -1,249 +1,565 @@
 import 'dart:math' as math;
-
 import 'package:bird_sort/bird_sort.dart' as engine;
 import 'package:flutter/material.dart';
-
-import 'bird_painter.dart';
+import 'aviary.dart';
+import 'palette.dart';
 import 'play_controller.dart';
 
-const _flightDuration = Duration(milliseconds: 520);
-
-/// The tree: central trunk, branches alternating left/right, birds perched
-/// trunk→tip. One big Stack in one coordinate system — every bird is an
-/// [AnimatedPositioned] keyed by its stable uid, so moves, flock departures
-/// and undo all animate for free (staggered via per-bird Interval curves).
+/// Stable bird identities interpolate across perches. Input stays live in flight.
 class BirdSortBoard extends StatefulWidget {
   final PlayController controller;
-
-  const BirdSortBoard({super.key, required this.controller});
-
+  final bool reducedMotion;
+  const BirdSortBoard({
+    super.key,
+    required this.controller,
+    this.reducedMotion = false,
+  });
   @override
   State<BirdSortBoard> createState() => _BirdSortBoardState();
 }
 
 class _BirdSortBoardState extends State<BirdSortBoard>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _shake = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 380));
-  int _seenShakeTick = 0;
-
+  late final AnimationController _clock = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 12),
+  );
   @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_onControllerChange);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncMotion();
   }
 
-  void _onControllerChange() {
-    final c = widget.controller;
-    if (c.shakeTick != _seenShakeTick) {
-      _seenShakeTick = c.shakeTick;
-      _shake.forward(from: 0);
+  @override
+  void didUpdateWidget(covariant BirdSortBoard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncMotion();
+  }
+
+  void _syncMotion() {
+    if (widget.reducedMotion ||
+        MediaQuery.disableAnimationsOf(context) ||
+        widget.controller.state.isWon) {
+      _clock.stop();
+    } else {
+      if (!_clock.isAnimating) _clock.repeat();
     }
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(_onControllerChange);
-    _shake.dispose();
+    _clock.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([widget.controller, _shake]),
-      builder: (context, _) => LayoutBuilder(
-        builder: (context, constraints) =>
-            _buildTree(context, constraints.biggest),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, viewport) => SingleChildScrollView(
+      child: SizedBox(
+        width: viewport.maxWidth,
+        height: math.max(
+          viewport.maxHeight,
+          widget.controller.state.branches.length * 66.0,
+        ),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final c = widget.controller;
+            final reduced =
+                widget.reducedMotion || MediaQuery.disableAnimationsOf(context);
+            final rows = c.state.branches.length;
+            final rowHeight = box.maxHeight / rows;
+            final birdSize = math.min(
+              67.0,
+              math.min((box.maxWidth - 86) / c.level.capacity, rowHeight * .82),
+            );
+            final span = birdSize * c.level.capacity;
+            Offset origin(int branch, int slot) {
+              final left =
+                  (box.maxWidth - span) / 2 + (branch.isEven ? -10 : 10);
+              return Offset(
+                left + slot * birdSize,
+                rowHeight * branch + rowHeight - birdSize - 13,
+              );
+            }
 
-  Widget _buildTree(BuildContext context, Size size) {
-    final c = widget.controller;
-    final state = c.state;
-    final branches = state.branches;
-    final capacity = state.level.capacity;
-
-    final rows = branches.length;
-    final rowH = ((size.height - 24) / rows).clamp(48.0, 110.0);
-    final treeH = rowH * rows;
-    final top = (size.height - treeH) / 2;
-    final centerX = size.width / 2;
-    const trunkW = 20.0;
-    final halfSpan = size.width / 2 - trunkW / 2 - 10;
-    final birdSize =
-        math.min(halfSpan / capacity, rowH * 0.66).floorToDouble();
-    final barH = math.max(10.0, birdSize * 0.16);
-
-    double rowTop(int i) => top + i * rowH;
-    double barY(int i) => rowTop(i) + rowH * 0.80;
-
-    // Bird slot origin (top-left) for branch i, slot s (0 = trunk-most).
-    Offset slotOrigin(int i, int s) {
-      final y = barY(i) - birdSize;
-      final side = branches[i].side;
-      return side == engine.Side.left
-          ? Offset(centerX - trunkW / 2 - (s + 1) * birdSize, y)
-          : Offset(centerX + trunkW / 2 + s * birdSize, y);
-    }
-
-    final shakeOffset = math.sin(_shake.value * math.pi * 4) *
-        7 *
-        (1 - _shake.value) *
-        (_shake.isAnimating ? 1 : 0);
-
-    final children = <Widget>[
-      // Trunk.
-      Positioned(
-        left: centerX - trunkW / 2,
-        top: top - 8,
-        width: trunkW,
-        height: treeH + 16,
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF6D4C41),
-            borderRadius: BorderRadius.circular(trunkW / 2),
-          ),
+            final lifted = <int>{};
+            if (c.selected != null) {
+              final ids = c.birdIds[c.selected!];
+              lifted.addAll(ids.skip(ids.length - c.linkedGroup(c.selected!)));
+            }
+            return RepaintBoundary(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  for (var i = 0; i < rows; i++)
+                    if (!c.state.branches[i].removed)
+                      Positioned(
+                        left: origin(i, 0).dx - 14,
+                        top: i * rowHeight + 2,
+                        width: span + 28,
+                        height: rowHeight - 3,
+                        child: _Shake(
+                          tick: c.shakeTick,
+                          active: c.shakeBranch == i && !reduced,
+                          child: Semantics(
+                            button: true,
+                            label:
+                                'Branch ${i + 1}, ${c.state.branches[i].birds.map((id) => birdNames[id % 8]).join(', ')}${c.state.branches[i].isEmpty ? 'empty' : ''}',
+                            child: GestureDetector(
+                              key: ValueKey('branch$i'),
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => c.tapBranch(i),
+                              child: AnimatedContainer(
+                                duration: Duration(
+                                  milliseconds: reduced ? 0 : 180,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: c.selected == i
+                                      ? const Color(
+                                          0xFFFFE5A0,
+                                        ).withValues(alpha: .55)
+                                      : Colors.white.withValues(alpha: .28),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color:
+                                        c.selected != null &&
+                                            engine.moveSize(
+                                                  c.level,
+                                                  c.state.branches,
+                                                  c.selected!,
+                                                  i,
+                                                ) !=
+                                                null
+                                        ? const Color(0xFF69BDA1)
+                                        : Colors.white.withValues(alpha: .4),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Positioned(
+                                      left: 3,
+                                      top: 7,
+                                      child: Text(
+                                        '${i + 1}'.padLeft(2, '0'),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: aviaryInk.withValues(
+                                            alpha: .45,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (c.state.branches[i].isEmpty)
+                                      Center(
+                                        child: Text(
+                                          c.selected == null
+                                              ? 'A little room to land'
+                                              : 'Land here',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: aviaryInk.withValues(
+                                              alpha: .55,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    Positioned(
+                                      left: 6,
+                                      right: 6,
+                                      bottom: 7,
+                                      height: 12,
+                                      child: TweenAnimationBuilder<double>(
+                                        key: ValueKey(
+                                          'bounce$i-${c.transitionTick}',
+                                        ),
+                                        tween: Tween(
+                                          begin: reduced ? 0 : 1,
+                                          end: 0,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 450,
+                                        ),
+                                        builder: (context, t, child) =>
+                                            Transform.translate(
+                                              offset: Offset(
+                                                0,
+                                                math.sin(t * math.pi * 3) *
+                                                    t *
+                                                    3,
+                                              ),
+                                              child: child,
+                                            ),
+                                        child: CustomPaint(
+                                          painter: _PerchPainter(),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  for (var i = 0; i < rows; i++)
+                    for (var s = 0; s < c.birdIds[i].length; s++)
+                      _bird(
+                        c.birdIds[i][s],
+                        origin(i, s) -
+                            Offset(
+                              0,
+                              lifted.contains(c.birdIds[i][s]) ? 12 : 0,
+                            ),
+                        birdSize,
+                        reduced,
+                        lifted.contains(c.birdIds[i][s]),
+                      ),
+                  for (final e in c.departed.entries)
+                    _bird(
+                      e.key,
+                      Offset(
+                        e.value.side == engine.Side.left
+                            ? -100
+                            : box.maxWidth + 30,
+                        -100 - e.value.slot * 20,
+                      ),
+                      birdSize,
+                      reduced,
+                      false,
+                      landingTarget: origin(e.value.branchIndex, e.value.slot),
+                    ),
+                  if (c.departed.isNotEmpty)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: TweenAnimationBuilder<double>(
+                          key: ValueKey('sparkles${c.departed.length}'),
+                          tween: Tween(begin: 0, end: 1),
+                          duration: Duration(milliseconds: reduced ? 0 : 950),
+                          builder: (context, value, _) => CustomPaint(
+                            painter: _Sparkles(
+                              value: value,
+                              count: c.state.isWon ? 40 : 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
         ),
       ),
-    ];
+    ),
+  );
+  Widget _bird(
+    int uid,
+    Offset target,
+    double size,
+    bool reduced,
+    bool selected, {
+    Offset? landingTarget,
+  }) => _FlyingBird(
+    key: ValueKey('bird$uid'),
+    target: target,
+    size: size,
+    species: widget.controller.colourOf[uid]!,
+    uid: uid,
+    clock: _clock,
+    reduced: reduced,
+    selected: selected,
+    landingTarget: landingTarget,
+  );
+}
 
-    // Branch bars (under the birds).
-    for (var i = 0; i < rows; i++) {
-      final branch = branches[i];
-      final side = branch.side;
-      final barLen = birdSize * capacity + birdSize * 0.35;
-      final left = side == engine.Side.left
-          ? centerX - trunkW / 2 - barLen
-          : centerX + trunkW / 2;
-      children.add(AnimatedPositioned.fromRect(
-        key: ValueKey('bar$i'),
-        duration: _flightDuration,
-        rect: Rect.fromLTWH(
-            left + (c.shakeBranch == i ? shakeOffset : 0), barY(i),
-            barLen, barH),
-        child: AnimatedOpacity(
-          duration: _flightDuration,
-          opacity: branch.removed ? 0.0 : 1.0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF795548),
-              borderRadius: BorderRadius.circular(barH / 2),
-            ),
-            child: Align(
-              alignment: side == engine.Side.left
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: Container(
-                width: barH * 1.15,
-                height: barH * 1.15,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: const BoxDecoration(
-                    color: Color(0xFF66BB6A), shape: BoxShape.circle),
+class _FlyingBird extends StatefulWidget {
+  final Offset target;
+  final Offset? landingTarget;
+  final double size;
+  final int species, uid;
+  final Animation<double> clock;
+  final bool reduced, selected;
+  const _FlyingBird({
+    super.key,
+    required this.target,
+    required this.size,
+    required this.species,
+    required this.uid,
+    required this.clock,
+    required this.reduced,
+    required this.selected,
+    this.landingTarget,
+  });
+  @override
+  State<_FlyingBird> createState() => _FlyingBirdState();
+}
+
+class _FlyingBirdState extends State<_FlyingBird>
+    with SingleTickerProviderStateMixin {
+  late Offset _from = widget.target;
+  late Offset _to = widget.target;
+  late final AnimationController _flight = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+    value: 1,
+  );
+  Offset get _position {
+    final t = _flight.value;
+    final perch = widget.landingTarget;
+    if (widget.reduced) return _to;
+    if (perch != null && t < 1) {
+      if (t < .42) {
+        final p = t / .42;
+        return Offset.lerp(_from, perch, Curves.easeInOut.transform(p))! -
+            Offset(0, math.sin(p * math.pi) * 22);
+      }
+      if (t < .64) {
+        return perch - Offset(0, math.sin((t - .42) / .22 * math.pi) * 10);
+      }
+      final p = (t - .64) / .36;
+      return Offset.lerp(perch, _to, Curves.easeInCubic.transform(p))! -
+          Offset(0, math.sin(p * math.pi) * 30);
+    }
+    return Offset.lerp(_from, _to, Curves.easeInOutCubic.transform(t))! -
+        Offset(0, math.sin(t * math.pi) * 28);
+  }
+
+  @override
+  void didUpdateWidget(covariant _FlyingBird oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.target != _to) {
+      // Layout changes may move the offscreen destination. They must not
+      // replay the landing/hop sequence for an already departed flock.
+      // Undo clears landingTarget, so returning birds still animate normally.
+      if (oldWidget.landingTarget != null && widget.landingTarget != null) {
+        _to = widget.target;
+        return;
+      }
+      _from = _position;
+      _to = widget.target;
+      if (widget.reduced) {
+        _flight.value = 1;
+      } else {
+        _flight.duration = Duration(
+          milliseconds: widget.landingTarget == null ? 420 : 850,
+        );
+        _flight.forward(from: 0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _flight.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: Listenable.merge([_flight, widget.clock]),
+    child: BirdArt(species: widget.species),
+    builder: (context, child) {
+      final phase = widget.clock.value * math.pi * 8 + widget.uid * 1.7;
+      final flying = _flight.isAnimating;
+      final breath = widget.reduced ? 0.0 : math.sin(phase) * .018;
+      final tilt = widget.reduced
+          ? 0.0
+          : math.pow(math.max(0, math.sin(phase / 3)), 18) * .065;
+      final landing = flying && _flight.value > .8
+          ? math.sin((_flight.value - .8) * math.pi * 5) * .10
+          : 0.0;
+      final pos = _position;
+      return Positioned(
+        left: pos.dx,
+        top: pos.dy,
+        width: widget.size,
+        height: widget.size,
+        child: IgnorePointer(
+          child: Transform.rotate(
+            angle: flying ? math.sin(_flight.value * math.pi * 6) * .09 : tilt,
+            alignment: Alignment.bottomCenter,
+            child: Transform.scale(
+              scaleX: 1 + landing,
+              scaleY: 1 + breath - landing,
+              alignment: Alignment.bottomCenter,
+              child: Stack(
+                children: [
+                  if (widget.selected)
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFFFFD464,
+                              ).withValues(alpha: .6),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  Positioned.fill(child: child!),
+                  if (!widget.reduced &&
+                      !flying &&
+                      ((widget.clock.value * 12 + widget.uid * .73) % 4) < .13)
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _BlinkPainter(widget.species),
+                      ),
+                    ),
+                  if (flying && !widget.reduced)
+                    Positioned(
+                      left: widget.size * .17,
+                      top: widget.size * .46,
+                      child: Transform.rotate(
+                        angle: math.sin(_flight.value * math.pi * 10) * .8,
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          width: widget.size * .32,
+                          height: widget.size * .14,
+                          decoration: BoxDecoration(
+                            color: birdColour(widget.species),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
         ),
-      ));
-    }
+      );
+    },
+  );
+}
 
-    // Birds. Iterate the id mirror; stable keys keep flight continuous.
-    final lifted = <int>{};
-    if (c.selected != null) {
-      final ids = c.birdIds[c.selected!];
-      final group = c.linkedGroup(c.selected!);
-      lifted.addAll(ids.sublist(ids.length - group));
-    }
-
-    for (var i = 0; i < rows; i++) {
-      final side = branches[i].side;
-      for (var s = 0; s < c.birdIds[i].length; s++) {
-        final uid = c.birdIds[i][s];
-        final o = slotOrigin(i, s);
-        children.add(_bird(
-          c,
-          uid,
-          left: o.dx + (c.shakeBranch == i ? shakeOffset : 0),
-          top: o.dy - (lifted.contains(uid) ? birdSize * 0.30 : 0),
-          size: birdSize,
-          facingLeft: side == engine.Side.left,
-        ));
-      }
-    }
-
-    // Departed birds: fly off toward their branch's side, high and away.
-    for (final entry in c.departed.entries) {
-      final uid = entry.key;
-      final side = entry.value.side;
-      final y = rowTop(entry.value.branchIndex) - size.height * 0.55;
-      children.add(_bird(
-        c,
-        uid,
-        left: side == engine.Side.left
-            ? -birdSize * 3 - (c.staggerOf[uid] ?? 0) * birdSize
-            : size.width + birdSize * 2 + (c.staggerOf[uid] ?? 0) * birdSize,
-        top: y,
-        size: birdSize,
-        facingLeft: side == engine.Side.left,
-        opacity: 0.0,
-      ));
-    }
-
-    // Tap areas: whole half-row per branch (bar + birds + empty space).
-    for (var i = 0; i < rows; i++) {
-      if (branches[i].removed) continue;
-      final side = branches[i].side;
-      children.add(Positioned(
-        left: side == engine.Side.left ? 0 : centerX,
-        top: rowTop(i),
-        width: size.width / 2,
-        height: rowH,
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () => c.tapBranch(i),
-        ),
-      ));
-    }
-
-    return ClipRect(
-      child: Stack(clipBehavior: Clip.none, children: children),
+class _PerchPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 9
+      ..color = const Color(0xFFA97545);
+    canvas.drawLine(Offset(0, 5), Offset(size.width, 7), p);
+    p
+      ..strokeWidth = 2
+      ..color = const Color(0xFFDFB77A);
+    canvas.drawLine(const Offset(4, 2), Offset(size.width - 6, 4), p);
+    p.color = const Color(0xFF72A778);
+    canvas.drawOval(
+      Rect.fromLTWH(size.width - 7, -5, 14, 8),
+      p..style = PaintingStyle.fill,
     );
+    canvas.drawOval(Rect.fromLTWH(0, 6, 12, 7), p);
   }
 
-  Widget _bird(
-    PlayController c,
-    int uid, {
-    required double left,
-    required double top,
-    required double size,
-    required bool facingLeft,
-    double opacity = 1.0,
-  }) {
-    final stagger = c.staggerOf[uid];
-    final curve = stagger == null
-        ? Curves.easeInOutCubic
-        : Interval(math.min(0.45, stagger * 0.12), 1.0,
-            curve: Curves.easeInOutCubic);
-    return AnimatedPositioned(
-      key: ValueKey('bird$uid'),
-      duration: _flightDuration,
-      curve: curve,
-      left: left,
-      top: top,
-      width: size,
-      height: size,
-      child: AnimatedOpacity(
-        duration: _flightDuration,
-        curve: curve,
-        opacity: opacity,
-        child: IgnorePointer(
-          child: CustomPaint(
-            painter: BirdPainter(
-                colourId: c.colourOf[uid]!, facingLeft: facingLeft),
-          ),
-        ),
-      ),
-    );
+  @override
+  bool shouldRepaint(_PerchPainter old) => false;
+}
+
+class _Sparkles extends CustomPainter {
+  final double value;
+  final int count;
+  _Sparkles({required this.value, required this.count});
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (value >= 1) return;
+    for (var i = 0; i < count; i++) {
+      final angle = i * 2.399;
+      final center = Offset(
+        size.width * .5 + math.cos(angle) * size.width * .5 * value,
+        size.height * .45 + math.sin(angle) * size.height * .5 * value,
+      );
+      final p = Paint()
+        ..color = [
+          const Color(0xFFEAB64D),
+          const Color(0xFFFFFAE6),
+          const Color(0xFF60BA99),
+        ][i % 3].withValues(alpha: 1 - value)
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round;
+      final r = (1 - value) * 5;
+      canvas.drawLine(center - Offset(r, 0), center + Offset(r, 0), p);
+      canvas.drawLine(center - Offset(0, r), center + Offset(0, r), p);
+    }
   }
+
+  @override
+  bool shouldRepaint(_Sparkles old) => old.value != value;
+}
+
+class _BlinkPainter extends CustomPainter {
+  final int species;
+  _BlinkPainter(this.species);
+  static const eyes = [
+    [Offset(.615, .333)],
+    [Offset(.612, .325)],
+    [Offset(.545, .32), Offset(.713, .272)],
+    [Offset(.63, .257), Offset(.78, .244)],
+    [Offset(.54, .38), Offset(.739, .355)],
+    [Offset(.61, .28)],
+    [Offset(.58, .29)],
+    [Offset(.61, .356)],
+  ];
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final eye in eyes[species % 8]) {
+      final center = Offset(eye.dx * size.width, eye.dy * size.height);
+      final r = size.width * (species == 4 ? .055 : .034);
+      canvas.drawOval(
+        Rect.fromCenter(center: center, width: r * 2, height: r * 2.2),
+        Paint()
+          ..color = const [
+            Color(0xFF382C29),
+            Color(0xFFEAE5D6),
+            Color(0xFFFFD65D),
+            Color(0xFFE6D84A),
+            Color(0xFFDCCABA),
+            Color(0xFFF0A046),
+            Color(0xFF328C99),
+            Color(0xFFF2B2B9),
+          ][species % 8],
+      );
+      canvas.drawArc(
+        Rect.fromCenter(
+          center: center - Offset(0, r * .4),
+          width: r * 1.6,
+          height: r,
+        ),
+        0,
+        math.pi,
+        false,
+        Paint()
+          ..color = aviaryInk
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BlinkPainter old) => old.species != species;
+}
+
+class _Shake extends StatelessWidget {
+  final int tick;
+  final bool active;
+  final Widget child;
+  const _Shake({required this.tick, required this.active, required this.child});
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    key: ValueKey(tick),
+    tween: Tween(begin: active ? 1.0 : 0.0, end: 0.0),
+    duration: const Duration(milliseconds: 280),
+    child: child,
+    builder: (context, value, child) => Transform.translate(
+      offset: Offset(math.sin(value * math.pi * 4) * value * 6, 0),
+      child: child,
+    ),
+  );
 }

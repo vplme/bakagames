@@ -34,9 +34,11 @@ class BakaGamesApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Baka Games',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF386B55)),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFFFF9E9),
       ),
       home: HomeScreen(registry: registry, store: store, settings: settings),
     );

@@ -5,3 +5,6 @@ pubspec.lock
 .flutter-plugins*
 .idea/
 *.iml
+
+# Pin the shipped Flutter app dependency graph.
+!/app/pubspec.lock

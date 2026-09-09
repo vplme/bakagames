@@ -5,15 +5,18 @@ import 'package:flutter/foundation.dart';
 class DepartureInfo {
   final int branchIndex;
   final engine.Side side;
-  const DepartureInfo(this.branchIndex, this.side);
+
+  /// Stable position within this departed flock, retained across later moves.
+  final int slot;
+  const DepartureInfo(this.branchIndex, this.side, {required this.slot});
 }
 
 class _Snapshot {
   final List<List<int>> mirror;
   final Map<int, DepartureInfo> departed;
   _Snapshot(List<List<int>> mirror, Map<int, DepartureInfo> departed)
-      : mirror = [for (final b in mirror) List.of(b)],
-        departed = Map.of(departed);
+    : mirror = [for (final b in mirror) List.of(b)],
+      departed = Map.of(departed);
 }
 
 /// UI-side game controller.
@@ -91,8 +94,7 @@ class PlayController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final size =
-        engine.moveSize(state.level, state.branches, selected!, index);
+    final size = engine.moveSize(state.level, state.branches, selected!, index);
     if (size == null) {
       _shake(index);
       notifyListeners();
@@ -118,17 +120,18 @@ class PlayController extends ChangeNotifier {
     birdIds[move.to] = [...birdIds[move.to], ...moving];
 
     transitionTick++;
-    staggerOf = {
-      for (var i = 0; i < moving.length; i++) moving[i]: i,
-    };
+    staggerOf = {for (var i = 0; i < moving.length; i++) moving[i]: i};
 
     // The engine emptied the destination → that flock flew away.
     if (next.branches[move.to].isEmpty) {
-      final info = DepartureInfo(move.to, state.branches[move.to].side);
       departed = Map.of(departed);
       var i = 0;
       for (final uid in birdIds[move.to]) {
-        departed[uid] = info;
+        departed[uid] = DepartureInfo(
+          move.to,
+          state.branches[move.to].side,
+          slot: i,
+        );
         staggerOf[uid] = i++;
       }
       birdIds[move.to] = [];
