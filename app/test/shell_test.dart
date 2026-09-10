@@ -42,7 +42,7 @@ void main() {
     expect(find.text('All games'), findsOneWidget);
     expect(find.text('Play level 1'), findsOneWidget);
     expect(find.text('Kiwi is getting closer!'), findsOneWidget);
-    expect(find.text('3 levels to discover · 3/8 birds'), findsOneWidget);
+    expect(find.text('3 levels to discover · 3/15 birds'), findsOneWidget);
 
     // Open level select: level 1 unlocked, level 3 locked.
     await tester.scrollUntilVisible(

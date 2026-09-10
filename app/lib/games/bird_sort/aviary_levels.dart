@@ -26,7 +26,21 @@ engine.Level aviaryLevelFor(int index) {
       ? 6
       : index < 35
       ? 7
-      : 8;
+      : index < 48
+      ? 8
+      : index < 63
+      ? 9
+      : index < 80
+      ? 10
+      : index < 99
+      ? 11
+      : index < 120
+      ? 12
+      : index < 143
+      ? 13
+      : index < 168
+      ? 14
+      : 15;
   final count = available < base.colourCount ? base.colourCount : available;
   final shift = index < 3 ? 0 : index % count;
   return engine.Level(

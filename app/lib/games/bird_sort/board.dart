@@ -104,7 +104,7 @@ class _BirdSortBoardState extends State<BirdSortBoard>
                           child: Semantics(
                             button: true,
                             label:
-                                'Branch ${i + 1}, ${c.state.branches[i].birds.map((id) => birdNames[id % 8]).join(', ')}${c.state.branches[i].isEmpty ? 'empty' : ''}',
+                                'Branch ${i + 1}, ${c.state.branches[i].birds.map((id) => birdNames[id % birdNames.length]).join(', ')}${c.state.branches[i].isEmpty ? 'empty' : ''}',
                             child: GestureDetector(
                               key: ValueKey('branch$i'),
                               behavior: HitTestBehavior.opaque,
@@ -505,12 +505,25 @@ class _BlinkPainter extends CustomPainter {
     [Offset(.61, .28)],
     [Offset(.58, .29)],
     [Offset(.61, .356)],
+    [Offset(.600, .228)],
+    [Offset(.585, .244)],
+    [Offset(.480, .247)],
+    [Offset(.696, .235)],
+    [Offset(.649, .306)],
+    [Offset(.590, .395)],
+    [Offset(.530, .324)],
   ];
   @override
   void paint(Canvas canvas, Size size) {
-    for (final eye in eyes[species % 8]) {
+    for (final eye in eyes[species % birdNames.length]) {
       final center = Offset(eye.dx * size.width, eye.dy * size.height);
-      final r = size.width * (species == 4 ? .055 : .034);
+      final r =
+          size.width *
+          (species == 4
+              ? .055
+              : species >= 8
+              ? .045
+              : .034);
       canvas.drawOval(
         Rect.fromCenter(center: center, width: r * 2, height: r * 2.2),
         Paint()
@@ -523,7 +536,14 @@ class _BlinkPainter extends CustomPainter {
             Color(0xFFF0A046),
             Color(0xFF328C99),
             Color(0xFFF2B2B9),
-          ][species % 8],
+            Color(0xFFF3E4CF),
+            Color(0xFFF6DFBD),
+            Color(0xFF398CBB),
+            Color(0xFFF6EDE5),
+            Color(0xFF35343C),
+            Color(0xFFF0AC63),
+            Color(0xFF73B88C),
+          ][species % birdNames.length],
       );
       canvas.drawArc(
         Rect.fromCenter(

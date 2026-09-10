@@ -1,0 +1,288 @@
+{
+  "tool": "built-in image_gen.imagegen; no selectable model",
+  "prompt": "Use case: stylized-concept. Asset type: Pocket Aviary mobile bird sorting puzzle habitat background. Scene: {scene}. Polished soft dimensional gouache storybook game art, charming miniature natural world, rounded painterly forms and subtle paper texture. Portrait 2:3 composition. Keep middle 75 percent extremely quiet, pale, open, low-contrast negative space behind colorful bird puzzle pieces. Foliage and scenery confined to outer edges; richer detail at bottom corners. Soft diffuse light. Opaque full-bleed background. No birds, animals, perches, horizontal foreground branches, UI, lettering, text, logos, or watermark.",
+  "habitats": [
+    {
+      "chapter": 4,
+      "file": "willow",
+      "name": "Willow pond",
+      "scene": "a willow pond, drooping willow leaves at upper corners, lily pads and reeds at bottom edges, pale mint watery mist"
+    },
+    {
+      "chapter": 5,
+      "file": "bamboo",
+      "name": "Bamboo glade",
+      "scene": "a bamboo glade, slender bamboo at far sides, mossy stones below, pale jade mist"
+    },
+    {
+      "chapter": 6,
+      "file": "lavender",
+      "name": "Lavender meadow",
+      "scene": "a lavender meadow, lavender sprigs and grasses at bottom corners, distant rolling lilac hills, pale cream sky"
+    },
+    {
+      "chapter": 7,
+      "file": "mangrove",
+      "name": "Mangrove lagoon",
+      "scene": "a mangrove lagoon, arching roots at outer corners, turquoise water below, pale aqua haze"
+    },
+    {
+      "chapter": 8,
+      "file": "pine",
+      "name": "Pine ridge",
+      "scene": "an alpine pine ridge, fir trees at far edges, tiny pine cones and moss below, pale powder blue sky"
+    },
+    {
+      "chapter": 9,
+      "file": "sunflower",
+      "name": "Sunflower field",
+      "scene": "a sunflower field, golden sunflowers framing bottom corners, distant gentle green hills, pale buttery sky"
+    },
+    {
+      "chapter": 10,
+      "file": "redwood",
+      "name": "Redwood sanctuary",
+      "scene": "a redwood sanctuary, warm reddish trunks at far edges, fern carpet below, pale sage clearing"
+    },
+    {
+      "chapter": 11,
+      "file": "lotus",
+      "name": "Lotus marsh",
+      "scene": "a lotus marsh, pink lotus flowers and broad pads at lower corners, pale pearl green mist"
+    },
+    {
+      "chapter": 12,
+      "file": "autumn",
+      "name": "Autumn orchard",
+      "scene": "an autumn orchard, amber apple tree leaves framing edges, fallen apples below, pale peach sky"
+    },
+    {
+      "chapter": 13,
+      "file": "coast",
+      "name": "Seaside dunes",
+      "scene": "seaside dunes, sea oats at edges, shells and dune grass below, pale blue ocean haze"
+    },
+    {
+      "chapter": 14,
+      "file": "rainforest",
+      "name": "Rainforest clearing",
+      "scene": "a rainforest clearing, broad tropical foliage around far edges, orchids below, pale celadon humid mist"
+    },
+    {
+      "chapter": 15,
+      "file": "birch",
+      "name": "Birch meadow",
+      "scene": "a birch meadow, white birch trunks framing sides, tiny wildflowers below, pale spring blue sky"
+    },
+    {
+      "chapter": 16,
+      "file": "desert",
+      "name": "Desert oasis",
+      "scene": "a desert oasis, palms at outer corners, small sandy rocks and succulent plants below, pale apricot sky"
+    },
+    {
+      "chapter": 17,
+      "file": "wisteria",
+      "name": "Wisteria arbor",
+      "scene": "a wisteria garden, hanging lilac flower clusters at top corners, mossy stones below, pale lavender cream center"
+    },
+    {
+      "chapter": 18,
+      "file": "wetland",
+      "name": "Golden wetlands",
+      "scene": "golden wetlands, cattails and ochre reeds at outer edges, shallow water below, pale golden mist"
+    },
+    {
+      "chapter": 19,
+      "file": "cloud",
+      "name": "Cloud forest",
+      "scene": "a cloud forest, moss-covered tree edges and bromeliads below, pale silver mint clouds"
+    },
+    {
+      "chapter": 20,
+      "file": "heather",
+      "name": "Heather moor",
+      "scene": "a heather moor, purple heather and rounded stones at lower corners, distant rolling hills, pale misty mauve sky"
+    },
+    {
+      "chapter": 21,
+      "file": "maple",
+      "name": "Maple hollow",
+      "scene": "a maple hollow, scarlet maple leaves at outer corners, moss and fallen leaves below, pale warm ivory clearing"
+    },
+    {
+      "chapter": 22,
+      "file": "coral",
+      "name": "Coral cove",
+      "scene": "a sheltered coral cove, coastal palms at far corners, small shells and pink coral fragments at bottom, pale turquoise sea haze"
+    },
+    {
+      "chapter": 23,
+      "file": "meadow",
+      "name": "Wildflower valley",
+      "scene": "a wildflower valley, poppies cornflowers and daisies at bottom edges, distant soft hills, pale warm cream sky"
+    },
+    {
+      "chapter": 24,
+      "file": "cedar",
+      "name": "Cedar creek",
+      "scene": "a cedar creek, cedar branches at outer edges, rounded creek stones below, pale cool sage mist"
+    },
+    {
+      "chapter": 25,
+      "file": "snow",
+      "name": "Snowy grove",
+      "scene": "a snowy grove, snow-dusted spruce at far edges, soft snow mounds below, pale icy blue sky"
+    },
+    {
+      "chapter": 26,
+      "file": "hibiscus",
+      "name": "Hibiscus garden",
+      "scene": "a hibiscus garden, coral hibiscus blossoms and glossy leaves at outer corners, pale rosy cream sky"
+    },
+    {
+      "chapter": 27,
+      "file": "papyrus",
+      "name": "Papyrus delta",
+      "scene": "a papyrus delta, umbrella papyrus reeds at far sides, calm water below, pale pistachio haze"
+    },
+    {
+      "chapter": 28,
+      "file": "olive",
+      "name": "Olive terrace",
+      "scene": "an olive terrace, silvery olive leaves at outer corners, warm limestone rocks and thyme below, pale warm ivory sky"
+    },
+    {
+      "chapter": 29,
+      "file": "waterfall",
+      "name": "Waterfall hollow",
+      "scene": "a waterfall hollow, a tiny distant waterfall confined to far left background, ferns and wet stones at bottom corners, pale aqua mist"
+    },
+    {
+      "chapter": 30,
+      "file": "acacia",
+      "name": "Acacia savanna",
+      "scene": "an acacia savanna, distant flat topped acacia silhouettes at far edges, golden grasses below, pale honey sky"
+    },
+    {
+      "chapter": 31,
+      "file": "bluebell",
+      "name": "Bluebell wood",
+      "scene": "a bluebell wood, soft oak trunks at far sides, bluebell carpet at bottom edges, pale lilac mist"
+    },
+    {
+      "chapter": 32,
+      "file": "monsoon",
+      "name": "Rain garden",
+      "scene": "a rain garden, wet broad leaves at corners, small puddles and ferns below, pale silver blue overcast clearing"
+    },
+    {
+      "chapter": 33,
+      "file": "peach",
+      "name": "Peach blossom vale",
+      "scene": "a peach blossom vale, coral pink blossom twigs at outer corners, petals and small rocks below, pale peach cream sky"
+    },
+    {
+      "chapter": 34,
+      "file": "cypress",
+      "name": "Cypress bayou",
+      "scene": "a cypress bayou, cypress knees and hanging moss confined to outer edges, calm water below, pale sage gray mist"
+    },
+    {
+      "chapter": 35,
+      "file": "fern",
+      "name": "Fern grotto",
+      "scene": "a fern grotto, mossy stone edges and curled ferns framing outer corners, pale luminous mint open clearing"
+    },
+    {
+      "chapter": 36,
+      "file": "poppy",
+      "name": "Poppy hillside",
+      "scene": "a poppy hillside, red poppies and soft grasses at bottom corners, distant rounded hills, pale golden cream sky"
+    },
+    {
+      "chapter": 37,
+      "file": "juniper",
+      "name": "Juniper plateau",
+      "scene": "a juniper plateau, low juniper foliage at far corners, terracotta pebbles and sagebrush below, pale powder peach sky"
+    },
+    {
+      "chapter": 38,
+      "file": "iris",
+      "name": "Iris waterway",
+      "scene": "an iris waterway, violet irises and sword leaves at bottom corners, soft water reflections below, pale lilac blue mist"
+    },
+    {
+      "chapter": 39,
+      "file": "chestnut",
+      "name": "Chestnut grove",
+      "scene": "a chestnut grove, chestnut leaves at top outer corners, burrs and moss at bottom corners, pale golden green clearing"
+    },
+    {
+      "chapter": 40,
+      "file": "banana",
+      "name": "Banana grove",
+      "scene": "a banana grove, large curved banana leaves at far corners, tropical flowers below, pale buttery mint center"
+    },
+    {
+      "chapter": 41,
+      "file": "tundra",
+      "name": "Arctic summer",
+      "scene": "an arctic summer meadow, dwarf willow and tiny purple saxifrage at bottom corners, distant snow hills, pale pink dawn sky"
+    },
+    {
+      "chapter": 42,
+      "file": "marigold",
+      "name": "Marigold garden",
+      "scene": "a marigold garden, orange yellow marigolds and small green leaves at bottom edges, pale warm cream sky"
+    },
+    {
+      "chapter": 43,
+      "file": "eucalyptus",
+      "name": "Eucalyptus woodland",
+      "scene": "a eucalyptus woodland, smooth pale trunks at far sides, blue green eucalyptus leaves and dry grasses below, pale silver mint sky"
+    },
+    {
+      "chapter": 44,
+      "file": "moonflower",
+      "name": "Moonflower garden",
+      "scene": "a moonflower garden at twilight, white trumpet flowers and winding leaves at outer corners, pale desaturated lavender center, soft evening glow"
+    },
+    {
+      "chapter": 45,
+      "file": "tea",
+      "name": "Tea hills",
+      "scene": "tea hills, rounded tea bushes at lower outer corners, distant softly layered green terraces, pale pearl mist"
+    },
+    {
+      "chapter": 46,
+      "file": "bougainvillea",
+      "name": "Bougainvillea courtyard",
+      "scene": "a bougainvillea courtyard, magenta flowers framing far upper corners, terracotta pots and warm stones only at bottom corners, pale peach ivory center"
+    },
+    {
+      "chapter": 47,
+      "file": "larch",
+      "name": "Golden larch lake",
+      "scene": "a golden larch lake, golden larch foliage at outer edges, tiny rocks and alpine grasses below, pale ice blue lake haze"
+    },
+    {
+      "chapter": 48,
+      "file": "firefly",
+      "name": "Firefly glen",
+      "scene": "a firefly glen at blue hour, teal ferns and moss at corners, tiny warm firefly points confined to lower edges, pale desaturated blue green clearing"
+    },
+    {
+      "chapter": 49,
+      "file": "magnolia",
+      "name": "Magnolia haven",
+      "scene": "a magnolia haven, ivory pink magnolia flowers at far upper corners, mossy roots and petals below, pale warm blush open clearing"
+    },
+    {
+      "chapter": 50,
+      "file": "rainbow",
+      "name": "Rainbow valley",
+      "scene": "a rainbow valley after rain, a faint pastel rainbow very high above, wildflowers and ferns at bottom corners, pale pearl blue open sky"
+    }
+  ]
+}

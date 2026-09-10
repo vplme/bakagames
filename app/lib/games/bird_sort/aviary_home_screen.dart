@@ -229,9 +229,9 @@ class _AviaryHomeScreenState extends State<AviaryHomeScreen> {
 
   Widget _collectionProgress(int completed) {
     final count = collectedCount(completed);
-    final next = count < 8 ? unlockAt[count] : completed;
+    final next = count < birdNames.length ? unlockAt[count] : completed;
     final previous = count > 3 ? unlockAt[count - 1] : 0;
-    final progress = count == 8
+    final progress = count == birdNames.length
         ? 1.0
         : ((completed - previous) / (next - previous)).clamp(0.0, 1.0);
     return InkWell(
@@ -253,14 +253,17 @@ class _AviaryHomeScreenState extends State<AviaryHomeScreen> {
         ),
         child: Row(
           children: [
-            BirdArt(species: count < 8 ? count : 7, size: 44),
+            BirdArt(
+              species: count < birdNames.length ? count : birdNames.length - 1,
+              size: 44,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    count == 8
+                    count == birdNames.length
                         ? 'Every friend, together.'
                         : '${birdNicknames[count]} is getting closer!',
                     style: const TextStyle(
@@ -281,9 +284,9 @@ class _AviaryHomeScreenState extends State<AviaryHomeScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    count == 8
+                    count == birdNames.length
                         ? 'Your collection is complete'
-                        : '${next - completed} levels to discover · $count/8 birds',
+                        : '${next - completed} levels to discover · $count/${birdNames.length} birds',
                     style: const TextStyle(
                       fontSize: 10,
                       color: Color(0xFF7D8B7A),

@@ -8,3 +8,11 @@ pubspec.lock
 
 # Pin the shipped Flutter app dependency graph.
 !/app/pubspec.lock
+
+# macOS
+.DS_Store
+
+# Local build config that embeds absolute machine paths.
+# (iOS equivalents are already covered by app/ios/.gitignore.)
+/app/android/local.properties
+.gradle/

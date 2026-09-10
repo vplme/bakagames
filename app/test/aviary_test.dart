@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'paced levels are deterministic, solvable, and feature all eight species',
+    'paced levels are deterministic, solvable, and feature all fifteen species',
     () {
       final seen = <int>{};
       for (final i in [
@@ -24,8 +24,24 @@ void main() {
         30,
         35,
         40,
+        47,
+        48,
         60,
+        62,
+        63,
+        70,
+        79,
+        80,
+        98,
         99,
+        119,
+        120,
+        142,
+        143,
+        167,
+        168,
+        178,
+        180,
         199,
         499,
       ]) {
@@ -41,12 +57,91 @@ void main() {
         expect(state.isWon, true);
         if (i % 5 == 4) expect(level.colourCount, 3);
       }
-      expect(seen, {0, 1, 2, 3, 4, 5, 6, 7});
+      expect(seen, {for (var i = 0; i < 15; i++) i});
       expect(collectedCount(0), 3);
       expect(collectedCount(3), 4);
       expect(collectedCount(35), 8);
+      expect(collectedCount(47), 8);
+      expect(collectedCount(48), 9);
+      expect(collectedCount(62), 9);
+      expect(collectedCount(63), 10);
+      expect(collectedCount(500), 15);
+      for (var species = 10; species < birdNames.length; species++) {
+        expect(collectedCount(unlockAt[species] - 1), species);
+        expect(collectedCount(unlockAt[species]), species + 1);
+        final introduced = <int>{};
+        for (var i = unlockAt[species]; i < unlockAt[species] + 15; i++) {
+          introduced.addAll(aviaryLevelFor(i).branches.expand((b) => b.birds));
+        }
+        expect(introduced, contains(species));
+      }
     },
   );
+
+  for (final pair in [
+    [8, 9],
+    [10, 11],
+    [12, 13],
+    [13, 14],
+  ]) {
+    testWidgets('species $pair render and animate on compact screens', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: BirdSortPlayScreen(
+            levelIndex: 63,
+            debugLevel: Level(
+              removeBranchOnComplete: false,
+              capacity: 4,
+              branches: [
+                Branch(
+                  side: Side.left,
+                  birds: [pair[0], pair[1], pair[0], pair[1]],
+                ),
+                Branch(
+                  side: Side.right,
+                  birds: [pair[1], pair[0], pair[1], pair[0]],
+                ),
+                Branch(side: Side.left, birds: const []),
+                Branch(side: Side.right, birds: const []),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.bySemanticsLabel(birdNames[pair[0]]), findsWidgets);
+      expect(find.bySemanticsLabel(birdNames[pair[1]]), findsWidgets);
+      // Cover idle blinking as well as flight with IDs beyond the original eight.
+      for (var frame = 0; frame < 100; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.tap(find.byKey(const ValueKey('branch0')));
+      await tester.ensureVisible(find.byKey(const ValueKey('branch2')));
+      await tester.tap(find.byKey(const ValueKey('branch2')));
+      expect(
+        tester
+            .widget<BirdSortBoard>(find.byType(BirdSortBoard))
+            .controller
+            .moveCount,
+        1,
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
 
   for (final remove in [false, true]) {
     testWidgets(
