@@ -1,17 +1,18 @@
-# baka_games
+# app
 
-A new Flutter project.
+The Flutter application for [Baka Games](../README.md) — the shared game library
+shell plus the per-game UI.
 
-## Getting Started
+The game rules themselves live outside this directory, in `packages/bird_sort/`
+and `packages/game_core/`, so they can be tested without Flutter.
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter run
 
-A few resources to get you started if this is your first Flutter project:
+flutter analyze
+flutter test
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+See [`../docs/design.md`](../docs/design.md) for the architecture and
+[`../AGENTS.md`](../AGENTS.md) for the working conventions.
