@@ -1,4 +1,5 @@
 import 'package:baka_games/games/bird_sort/bird_sort_game.dart';
+import 'package:baka_games/games/match_three/match_three_game.dart';
 import 'package:baka_games/main.dart';
 import 'package:baka_games/shell/progress_store.dart';
 import 'package:baka_games/shell/registry.dart';
@@ -122,6 +123,56 @@ void main() {
     expect(find.byKey(const ValueKey('game-card-bird_sort')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'Pocket Sweets opens its campaign and preserves Aviary progress',
+    (tester) async {
+      final store = SharedPrefsProgressStore();
+      final aviaryProgress = GameProgress().withCompleted(3, 8);
+      await store.save('bird_sort', aviaryProgress);
+      await store.save('match_three', GameProgress().withCompleted(4, 12));
+      final settings = AppSettings();
+      settings.reducedMotion.value = true;
+      settings.soundOn.value = false;
+      await tester.pumpWidget(
+        BakaGamesApp(
+          registry: GameRegistry([
+            birdSortEntry(store: store, settings: settings),
+            matchThreeEntry(store: store, settings: settings),
+          ]),
+          store: store,
+          settings: settings,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('game-card-match_three')),
+      );
+      await tester.tap(find.byKey(const ValueKey('game-card-match_three')));
+      await tester.pumpAndSettle();
+      expect(find.text('Play level 6'), findsOneWidget);
+      await tester.tap(find.text('Play level 6'));
+      await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Level 6'), findsOneWidget);
+      expect(find.text('LOVELY LINES'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Level path'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Level path'));
+      await tester.pumpAndSettle();
+      expect(find.text('6'), findsOneWidget);
+      expect(await store.load('bird_sort'), aviaryProgress);
+      expect((await store.load('match_three')).completedCount, 1);
+    },
+  );
 
   testWidgets('settings screen toggles persist', (tester) async {
     await tester.pumpWidget(buildApp());

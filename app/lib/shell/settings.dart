@@ -3,7 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// App-wide persisted preferences and short, locally bundled flock calls.
+/// App-wide persisted preferences and locally bundled game sound effects.
 class AppSettings {
   final SharedPreferencesAsync _prefs;
 
@@ -38,14 +38,14 @@ class AppSettings {
     await _prefs.setBool('settings.reducedMotion', on);
   }
 
-  Future<void> chirp({bool celebration = false}) async {
+  Future<void> chirp({bool celebration = false}) =>
+      playSound('aviary/${celebration ? 'celebrate' : 'chirp'}.wav');
+
+  Future<void> playSound(String asset) async {
     if (!soundOn.value) return;
     try {
       _player ??= AudioPlayer();
-      await _player!.play(
-        AssetSource('aviary/${celebration ? 'celebrate' : 'chirp'}.wav'),
-        volume: .45,
-      );
+      await _player!.play(AssetSource(asset), volume: .45);
     } catch (_) {
       // Audio interruptions must never interrupt a puzzle or progress save.
     }

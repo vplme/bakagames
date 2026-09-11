@@ -1,0 +1,38 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:1.00000,0.97000,0.90000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "03-Golden-Curve.svg",
+          "name" : "03-Golden-Curve"
+        },
+        {
+          "image-name" : "02-Coral-Arc.svg",
+          "name" : "02-Coral-Arc"
+        },
+        {
+          "image-name" : "01-Indigo-Stem.svg",
+          "name" : "01-Indigo-Stem"
+        }
+      ],
+      "name" : "Stack · Colored Glass",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.65
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.35
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

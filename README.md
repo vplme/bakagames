@@ -33,7 +33,7 @@ to make. You install it once for them, and it is done. That is the entire idea.
   including no `INTERNET`. There is no ad or analytics SDK in the dependency
   tree, and no networking code in this repo. (`audioplayers` pulls in `http`
   transitively because it *can* stream audio from a URL; this app only ever
-  plays two locally bundled WAV files, and without the `INTERNET` permission
+  plays locally bundled WAV files, and without the `INTERNET` permission
   Android would refuse the connection regardless.)
 - **No dark patterns.** No timers, lives, streaks, coins, or nagging. Undo is
   free and unlimited. You cannot lose, and nothing is ever gated behind a wait.
@@ -45,6 +45,8 @@ The point is an app you can hand to someone you love and then stop thinking abou
 | Game | What it is |
 | --- | --- |
 | **Bird Sort** | Sort birds onto branches until each branch holds one species. 500 levels, generated deterministically and verified solvable by the built-in solver, with 15 birds and 50 habitats to unlock as you go. |
+
+**Pocket Sweets** offers 30 match-three picnics with unlimited moves, collection goals, striped and rainbow sweets, cascades, hints, and undo. Progress stays on your device. See [the implementation tracker](docs/match-three-plan.md) for remaining device playtesting. Original glossy candy artwork and a candy-garden backdrop are bundled locally.
 
 More to come — the shell is built to hold a library of them.
 

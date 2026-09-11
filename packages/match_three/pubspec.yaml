@@ -1,0 +1,8 @@
+name: match_three
+description: Deterministic match-three rules for Pocket Sweets.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.0
+dev_dependencies:
+  test: ^1.25.0

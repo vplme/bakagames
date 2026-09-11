@@ -10,6 +10,8 @@ dependencies:
     sdk: flutter
   game_core:
     path: ../packages/game_core
+  match_three:
+    path: ../packages/match_three
   bird_sort:
     path: ../packages/bird_sort
   cupertino_icons: ^1.0.8
@@ -25,3 +27,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/aviary/
+    - assets/sweets/

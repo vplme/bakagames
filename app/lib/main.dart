@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'games/bird_sort/bird_sort_game.dart';
+import 'games/match_three/match_three_game.dart';
 import 'shell/home_screen.dart';
 import 'shell/progress_store.dart';
 import 'shell/registry.dart';
@@ -13,7 +14,7 @@ Future<void> main() async {
   final store = SharedPrefsProgressStore();
   final registry = GameRegistry([
     birdSortEntry(store: store, settings: settings),
-    // Future games: add one entry here.
+    matchThreeEntry(store: store, settings: settings),
   ]);
   runApp(BakaGamesApp(registry: registry, store: store, settings: settings));
 }

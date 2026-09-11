@@ -1,3 +1,4 @@
+import '../../shell/play_controls.dart';
 import 'dart:isolate';
 import 'dart:async';
 import 'package:game_core/game_core.dart';
@@ -464,17 +465,17 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _ControlButton(
+          PlayControlButton(
             icon: Icons.undo,
             label: 'Undo',
             onPressed: controller.canUndo ? controller.undoMove : null,
           ),
-          _ControlButton(
+          PlayControlButton(
             icon: Icons.refresh,
             label: 'Restart',
             onPressed: controller.canUndo ? controller.restartLevel : null,
           ),
-          _ControlButton(
+          PlayControlButton(
             icon: Icons.park_outlined,
             label: '+ Branch',
             onPressed: controller.extraBranchUsed || won
@@ -490,7 +491,7 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   ),
                 )
-              : _ControlButton(
+              : PlayControlButton(
                   icon: Icons.lightbulb_outline,
                   label: 'Hint',
                   onPressed: won ? null : () => _hint(controller),
@@ -506,34 +507,6 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
 /// (including unsendable futures) into the isolate message.
 Future<engine.SolveResult> _solveInIsolate(engine.GameState snapshot) =>
     Isolate.run(() => engine.solve(snapshot));
-
-class _ControlButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback? onPressed;
-
-  const _ControlButton({
-    required this.icon,
-    required this.label,
-    this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton.filledTonal(
-          tooltip: label,
-          iconSize: 28,
-          onPressed: onPressed,
-          icon: Icon(icon),
-        ),
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
-      ],
-    );
-  }
-}
 
 Future<engine.Level> _generateLevel(int index) =>
     Isolate.run(() => aviaryLevelFor(index));
