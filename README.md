@@ -7,10 +7,11 @@ for. Simple, pleasant, a bit pointless. The good kind of pointless.
 
 ## Why this exists
 
-The casual puzzle games our families love are usually free, and you pay for them
-in a currency that is easy to miss: full-page interstitial ads with a five-second
-countdown, a close button three pixels wide, and a one-tap install of whatever
-sketchy app bought the placement.
+The casual puzzle games our family members love are usually free, and you pay for them
+in a currency that is not easy to miss:
+- full-page interstitial ads with a five-second countdown
+- a close button three pixels wide
+- a one-tap install of whatever sketchy app bought ads.
 
 For most of us that is merely obnoxious. For the people most likely to be playing
 these games all afternoon — grandparents, young kids — it is a real problem. They
@@ -44,7 +45,7 @@ The point is an app you can hand to someone you love and then stop thinking abou
 
 | Game | What it is |
 | --- | --- |
-| **Bird Sort** | Sort birds onto branches until each branch holds one species. 500 levels, generated deterministically and verified solvable by the built-in solver, with 15 birds and 50 habitats to unlock as you go. |
+| **Pocket Aviary** | Sort birds onto branches until each branch holds one species. 500 levels, generated deterministically and verified solvable by the built-in solver, with 15 birds and 50 habitats to unlock as you go. |
 
 **Pocket Sweets** offers 30 match-three picnics with unlimited moves, collection goals, striped and rainbow sweets, cascades, hints, and undo. Progress stays on your device. See [the implementation tracker](docs/match-three-plan.md) for remaining device playtesting. Original glossy candy artwork and a candy-garden backdrop are bundled locally.
 
@@ -117,8 +118,3 @@ motifs.
 This is a personal project, but if you have a stupidly fun game idea that fits
 the constraints above — no ads, no tracking, no dark patterns, playable by a
 seven-year-old and a seventy-year-old — feel free to open an issue.
-
-## License
-
-No license file yet, so all rights are reserved for the moment. If you want to
-reuse something here, ask.

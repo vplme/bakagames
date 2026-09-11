@@ -16,3 +16,7 @@ pubspec.lock
 # (iOS equivalents are already covered by app/ios/.gitignore.)
 /app/android/local.properties
 .gradle/
+
+# Agent scratch space and local worktrees. Contains nested checkouts and
+# machine-local SDK paths; never part of the published tree.
+.claude/

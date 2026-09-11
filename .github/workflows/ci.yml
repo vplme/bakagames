@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Analyze and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # The Flutter app: static analysis plus widget and integration tests.
+      - name: Flutter app
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      # The pure Dart engines have no Flutter dependency, so they run under
+      # plain `dart test` -- keeping that separation honest is the point.
+      - name: Pure Dart packages
+        run: |
+          for pkg in game_core bird_sort match_three; do
+            echo "::group::$pkg"
+            (cd "packages/$pkg" && dart pub get && dart test)
+            echo "::endgroup::"
+          done
