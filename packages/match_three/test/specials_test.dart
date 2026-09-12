@@ -16,6 +16,84 @@ List<String> signature(MatchThree g) => [
 ];
 
 void main() {
+  test('variety effects stop at board edges without wrapping', () {
+    expect(MatchThree.varietyEffect(5, 0), {1, 7});
+    expect(MatchThree.varietyEffect(6, 0), {8});
+    expect(MatchThree.varietyEffect(7, 6), {4, 5});
+    expect(MatchThree.varietyEffect(4, 24), isEmpty);
+  });
+  for (final type in [5, 6, 7]) {
+    test('variety $type clears its footprint once and restores on undo', () {
+      final g = MatchThree(
+        opening: fixture({
+          22: Sweet(22, type),
+          24: Sweet(24, type),
+          16: Sweet(16, type),
+        }),
+        targets: List.filled(8, 999),
+        specials: SpecialRules.all,
+      );
+      final before = signature(g);
+      final steps = g.swap(16, 23);
+      final clear = steps.firstWhere((s) => s.kind == 'clear').state;
+      final expected = switch (type) {
+        5 => {16, 22, 23, 24, 30},
+        6 => {15, 17, 22, 23, 24, 29, 31},
+        _ => {21, 22, 23, 24, 25},
+      };
+      expect({
+        for (var i = 0; i < 49; i++)
+          if (clear.board[i] == null) i,
+      }, expected);
+      expect(clear.collected.reduce((a, b) => a + b), expected.length);
+      expect(clear.collected[type], 3);
+      expect(steps.any((s) => s.kind == 'special'), isTrue);
+      final after = signature(g);
+      g.undo();
+      expect(signature(g), before);
+      g.swap(16, 23);
+      expect(signature(g), after);
+    });
+  }
+
+  test('unlock boundaries restrict spawning and preserve undo and restart', () {
+    for (final number in [15, 16, 30, 31, 45, 46, 60, 61, 75, 76, 90]) {
+      final game = sweetLevels[number - 1].create();
+      final expected = number < 46
+          ? 5
+          : number < 61
+          ? 6
+          : number < 76
+          ? 7
+          : 8;
+      expect(game.typeCount, expected);
+      expect(
+        game.specials,
+        number <= 15
+            ? SpecialRules.none
+            : number <= 30
+            ? SpecialRules.lines
+            : SpecialRules.all,
+      );
+      final before = signature(game);
+      final move = game.hint()!;
+      final steps = game.swap(move.$1, move.$2);
+      for (final step in steps) {
+        expect(step.state.collected.length, expected);
+        expect(
+          step.state.board.whereType<Sweet>().every((p) => p.type < expected),
+          isTrue,
+        );
+      }
+      final after = signature(game);
+      game.undo();
+      expect(signature(game), before);
+      game.swap(move.$1, move.$2);
+      expect(signature(game), after);
+      game.restart();
+      expect(signature(game), before);
+    }
+  });
   test(
     'four creates a stripe at the destination, preserving its ID and credit',
     () {
@@ -102,9 +180,9 @@ void main() {
     },
   );
   test(
-    'all 30 levels are deterministic, playable and finish under legal hint play',
+    'all 90 levels are deterministic, playable and finish under legal hint play',
     () {
-      expect(sweetLevels.length, 30);
+      expect(sweetLevels.length, 90);
       final turns = <int>[];
       for (final level in sweetLevels) {
         final g = level.create();

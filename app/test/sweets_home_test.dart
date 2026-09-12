@@ -73,10 +73,33 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Sweet guide'));
       await tester.pumpAndSettle();
-      expect(find.text('Striped sweets'), findsOneWidget);
-      expect(find.text('Rainbow sweets'), findsOneWidget);
+      final guide = find.byType(BottomSheet);
+      for (final name in ['Caramel diamond', 'Raspberry ring', 'Peach twist']) {
+        expect(
+          find.descendant(of: guide, matching: find.text(name)),
+          findsOneWidget,
+        );
+      }
+      await tester.scrollUntilVisible(
+        find.text('Unlock at level 76'),
+        180,
+        scrollable: find
+            .descendant(of: guide, matching: find.byType(Scrollable))
+            .first,
+      );
+      expect(find.textContaining('two sweets to each side'), findsOneWidget);
       expect(tester.takeException(), isNull);
-      Navigator.of(tester.element(find.text('Striped sweets'))).pop();
+      final stripedGuide = find.descendant(
+        of: guide,
+        matching: find.text('Striped sweets'),
+      );
+      expect(stripedGuide, findsOneWidget);
+      expect(
+        find.descendant(of: guide, matching: find.text('Rainbow sweets')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      Navigator.of(tester.element(stripedGuide)).pop();
       await tester.pumpAndSettle();
       await tester.tap(find.text('Level path'));
       await tester.pumpAndSettle();

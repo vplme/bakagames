@@ -71,6 +71,19 @@ void main() {
     await settleWorker(tester);
   }
 
+  testWidgets('late campaign displays all unlocked collection goals', (
+    tester,
+  ) async {
+    await open(tester, MemoryStore(), levelIndex: 75, compact: true);
+    expect(find.bySemanticsLabel(RegExp('Caramel diamond:.*')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Raspberry ring:.*')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Peach twist:.*')), findsOneWidget);
+    await tester.ensureVisible(find.text('Restart'));
+    await tester.tap(find.text('Restart'));
+    await settleWorker(tester);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tap swap, hint, undo and restart', (tester) async {
     await open(tester, MemoryStore());
     final move = MatchThree().hint()!;

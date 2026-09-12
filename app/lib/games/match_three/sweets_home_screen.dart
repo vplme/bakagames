@@ -96,13 +96,41 @@ class _SweetsHomeScreenState extends State<SweetsHomeScreen> {
             _guideRow(
               const Sweet(0, 1, Special.row),
               'Striped sweets',
-              'From level 6: match four in a line. Match the striped sweet to sweep its row or column.',
+              'Match four in a line. Match the striped sweet to sweep its row or column.',
+              stripedUnlockLevel,
             ),
             const SizedBox(height: 16),
             _guideRow(
               const Sweet(0, 2, Special.color),
               'Rainbow sweets',
-              'From level 11: match five in a line. Swap a rainbow with a neighbor to collect that color.',
+              'Match five in a line. Swap a rainbow with a neighbor to collect that color.',
+              rainbowUnlockLevel,
+            ),
+            const SizedBox(height: 20),
+            _guideRow(
+              const Sweet(0, 5),
+              sweetNames[5],
+              'Match three or more to clear the four neighbors directly above, below, left, and right of the middle caramel.',
+              sweetUnlockLevels[5],
+            ),
+            const SizedBox(height: 16),
+            _guideRow(
+              const Sweet(0, 6),
+              sweetNames[6],
+              'Match three or more to clear the four diagonal neighbors of the middle raspberry ring.',
+              sweetUnlockLevels[6],
+            ),
+            const SizedBox(height: 16),
+            _guideRow(
+              const Sweet(0, 7),
+              sweetNames[7],
+              'Match three or more to clear two sweets to each side of the middle peach twist.',
+              sweetUnlockLevels[7],
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Each matched line triggers its variety effect once. Sweets caught in these effects count toward your goals and can activate striped or rainbow sweets. New striped and rainbow sweets survive the match that creates them.',
+              style: TextStyle(height: 1.5, color: sweetsInk),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -115,10 +143,15 @@ class _SweetsHomeScreenState extends State<SweetsHomeScreen> {
     ),
   );
 
-  Widget _guideRow(Sweet piece, String title, String text) => Row(
+  Widget _guideRow(Sweet piece, String title, String text, int level) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      SweetPiece(piece: piece, size: 58),
+      Opacity(
+        opacity: _progress != null && _progress!.highestUnlocked + 1 >= level
+            ? 1
+            : .35,
+        child: SweetPiece(piece: piece, size: 58),
+      ),
       const SizedBox(width: 12),
       Expanded(
         child: Column(
@@ -129,6 +162,16 @@ class _SweetsHomeScreenState extends State<SweetsHomeScreen> {
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 color: sweetsInk,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _progress != null && _progress!.highestUnlocked + 1 >= level
+                  ? 'Unlocked · level $level'
+                  : 'Unlock at level $level',
+              style: const TextStyle(
+                color: sweetsPink,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 4),
@@ -263,7 +306,7 @@ class _SweetsHomeScreenState extends State<SweetsHomeScreen> {
                               const SizedBox(height: 5),
                               Text(
                                 _progress == null
-                                    ? 'Thirty picnics to explore'
+                                    ? '$total picnics to explore'
                                     : '$count of $total picnics complete',
                                 style: const TextStyle(
                                   fontSize: 11,
