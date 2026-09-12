@@ -166,6 +166,7 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Level path'));
       await tester.pumpAndSettle();
       expect(find.text('6'), findsOneWidget);

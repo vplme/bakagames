@@ -517,7 +517,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                   spacing: 16,
                                   runSpacing: 8,
                                   children: [
-                                    for (var t = 0; t < 5; t++)
+                                    for (var t = 0; t < game.typeCount; t++)
                                       if (game.targets[t] > 0)
                                         Semantics(
                                           label:
@@ -980,8 +980,8 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
               child: const Text('Next level'),
             )
           else
-            const Text(
-              'All 30 picnics complete. Come back for a favorite anytime!',
+            Text(
+              'All ${sweetLevels.length} picnics complete. Come back for a favorite anytime!',
             ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

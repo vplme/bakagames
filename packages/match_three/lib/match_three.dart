@@ -37,12 +37,13 @@ class ResolutionStep {
 class MatchThree {
   static const size = 7;
   static const types = 5;
+  int get typeCount => targets.length;
   final int seed;
   final SpecialRules specials;
   final List<Sweet>? opening;
   final List<int> targets;
   late List<Sweet?> _board;
-  List<int> _collected = List.filled(types, 0);
+  late List<int> _collected;
   int _moves = 0;
   late int _random;
   int _nextId = 0;
@@ -55,13 +56,15 @@ class MatchThree {
     List<Sweet>? opening,
   }) : opening = opening == null ? null : List.unmodifiable(opening),
        targets = List.unmodifiable(targets ?? [12, 12, 12, 0, 0]) {
-    if (this.targets.length != types || this.targets.any((n) => n < 0)) {
-      throw ArgumentError('Expected five nonnegative targets');
+    if (this.targets.length < types ||
+        this.targets.length > 8 ||
+        this.targets.any((n) => n < 0)) {
+      throw ArgumentError('Expected five to eight nonnegative targets');
     }
     if (opening != null &&
         (opening.length != size * size ||
             opening.map((p) => p.id).toSet().length != size * size ||
-            opening.any((p) => p.id < 0 || p.type < 0 || p.type >= types) ||
+            opening.any((p) => p.id < 0 || p.type < 0 || p.type >= typeCount) ||
             matches(opening).isNotEmpty)) {
       throw ArgumentError('An opening needs 49 unique pieces and no matches');
     }
@@ -69,8 +72,10 @@ class MatchThree {
   }
 
   Snapshot get state => Snapshot(_board, _collected, _moves, _random, _nextId);
-  bool get won =>
-      List.generate(types, (i) => i).every((i) => _collected[i] >= targets[i]);
+  bool get won => List.generate(
+    typeCount,
+    (i) => i,
+  ).every((i) => _collected[i] >= targets[i]);
   bool get canUndo => _history.isNotEmpty;
 
   int _roll(int limit) {
@@ -82,7 +87,7 @@ class MatchThree {
     _random = seed & 0xffffffff;
     _nextId = 0;
     _moves = 0;
-    _collected = List.filled(types, 0);
+    _collected = List.filled(typeCount, 0);
     _history.clear();
     if (opening case final pieces?) {
       _board = List<Sweet?>.of(pieces);
@@ -98,7 +103,7 @@ class MatchThree {
     for (var attempt = 0; attempt < 100; attempt++) {
       _board = List.filled(size * size, null);
       for (var i = 0; i < _board.length; i++) {
-        final options = List.generate(types, (t) => t)
+        final options = List.generate(typeCount, (t) => t)
           ..removeWhere(
             (t) =>
                 (i % size >= 2 &&
@@ -114,7 +119,7 @@ class MatchThree {
     }
     _board = List.generate(
       size * size,
-      (i) => Sweet(_nextId++, (i ~/ size + i % size) % types),
+      (i) => Sweet(_nextId++, (i ~/ size + i % size) % typeCount),
     );
     for (final e in {0: 0, 1: 1, 2: 0, 8: 0}.entries) {
       _board[e.key] = Sweet(_nextId++, e.value);
@@ -127,6 +132,25 @@ class MatchThree {
       a < size * size &&
       b < size * size &&
       ((a ~/ size == b ~/ size && (a - b).abs() == 1) || (a - b).abs() == size);
+
+  /// One variety effect per matched run, centered on its middle sweet.
+  /// Effects do not retrigger when a sweet is caught in another effect.
+  static Set<int> varietyEffect(int type, int center) {
+    final offsets = switch (type) {
+      5 => [(0, -1), (0, 1), (-1, 0), (1, 0)],
+      6 => [(-1, -1), (-1, 1), (1, -1), (1, 1)],
+      7 => [(0, -2), (0, -1), (0, 1), (0, 2)],
+      _ => <(int, int)>[],
+    };
+    return {
+      for (final (dr, dc) in offsets)
+        if (center ~/ size + dr >= 0 &&
+            center ~/ size + dr < size &&
+            center % size + dc >= 0 &&
+            center % size + dc < size)
+          (center ~/ size + dr) * size + center % size + dc,
+    };
+  }
 
   static List<List<int>> _runs(List<Sweet?> board) {
     final result = <List<int>>[];
@@ -237,6 +261,11 @@ class MatchThree {
     for (var cascade = 0; cascade < 100; cascade++) {
       final runs = _runs(_board);
       final cleared = runs.expand((r) => r).toSet();
+      final varietyCells = <int>{
+        for (final run in runs)
+          ...varietyEffect(_board[run.first]!.type, run[run.length ~/ 2]),
+      };
+      cleared.addAll(varietyCells);
       if (cascade == 0 && colorTargets.isNotEmpty) cleared.addAll([a, b]);
       if (cleared.isEmpty) break;
       final creations = _creations(runs, cascade == 0 ? [b, a] : []);
@@ -261,7 +290,9 @@ class MatchThree {
           if (!creations.containsKey(j) && cleared.add(j)) queue.add(j);
         }
       }
-      final activated = cleared.any((i) => _board[i]!.special != Special.none);
+      final activated =
+          varietyCells.isNotEmpty ||
+          cleared.any((i) => _board[i]!.special != Special.none);
       for (final i in cleared) {
         _collected[_board[i]!.type]++;
         _board[i] = null;
@@ -287,7 +318,7 @@ class MatchThree {
       }
       steps.add(ResolutionStep('fall', state));
       for (var i = 0; i < size * size; i++) {
-        _board[i] ??= Sweet(_nextId++, _roll(types));
+        _board[i] ??= Sweet(_nextId++, _roll(typeCount));
       }
       steps.add(ResolutionStep('refill', state));
     }
