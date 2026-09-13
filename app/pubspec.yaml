@@ -17,6 +17,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.5
   audioplayers: ^6.8.1
+  flame: ^1.38.2
+  forge2d: ^0.13.1
 
 dev_dependencies:
   flutter_test:
@@ -28,3 +30,4 @@ flutter:
   assets:
     - assets/aviary/
     - assets/sweets/
+    - assets/pusher/
