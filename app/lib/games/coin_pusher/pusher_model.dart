@@ -82,6 +82,8 @@ class PusherModel {
   final List<PusherCoin> coins = [];
   late final Body pusher;
   final Map<String, int> collection = {};
+  // Transient presentation events; never persisted or inferred from balances.
+  final List<String> soundEvents = [];
   final List<String> justCollected = [];
   final List<String> justUnlocked = [];
   final List<String> justRewards = [];
@@ -276,6 +278,7 @@ class PusherModel {
     drops++;
     // The chute does not rise with the pile. Airborne coins reserve their spot.
     _coin(target, y, drops % 12 == 0 ? 5 : 1, z: dropHeight);
+    soundEvents.add('insert');
     if (drops % 12 == 0) _spawnPrize();
     cooldown = .18;
     return true;
@@ -318,10 +321,12 @@ class PusherModel {
         .where((c) => (c.body.position - Vector2(x, y)).length < c.radius + .72)
         .fold<double>(0, (h, c) => math.max(h, c.z + c.height));
     _coin(x, y, 5, z: top + 1.5, prize: kind);
+    if (initialSlot == null) soundEvents.add('toy_spawn');
   }
 
   /// Start a fresh machine while retaining lifetime earnings and toy collection.
   void resetBoard() {
+    soundEvents.clear();
     final fresh = PusherModel(lifetimeCollected: collected);
     for (final c in coins) {
       world.destroyBody(c.body);
@@ -383,6 +388,15 @@ class PusherModel {
         final p = c.body.position;
         final side = p.x < .25 || p.x > 9.75;
         if (side || p.y > 11.5) {
+          soundEvents.add(
+            side
+                ? (c.prize > 0 ? 'toy_side' : 'side')
+                : c.prize > 0
+                ? 'toy_collect'
+                : c.isSpecial || c.value > 1
+                ? 'valuable'
+                : 'collect',
+          );
           if (!side) {
             if (c.prize > 0) {
               final id = prizeIds[c.prize - 1];
@@ -411,6 +425,7 @@ class PusherModel {
               bonus = 0;
               balance += 10;
               earned += 10;
+              soundEvents.add('bonus');
             }
           }
           world.destroyBody(c.body);
@@ -422,6 +437,7 @@ class PusherModel {
     justUnlocked.addAll(
       prizeNames.sublist(previousUnlockCount, unlockedPrizeCount),
     );
+    if (justUnlocked.isNotEmpty) soundEvents.add('unlock');
     return earned;
   }
 
@@ -443,6 +459,7 @@ class PusherModel {
           )
           .fold<double>(0, (height, c) => math.max(height, c.z + c.height));
       _coin(x, y, bar ? 25 : 10, z: top + 1.5);
+      soundEvents.add('reward_spawn');
     }
   }
 

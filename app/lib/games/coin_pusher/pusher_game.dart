@@ -597,6 +597,7 @@ class PusherGame extends FlameGame {
   final PusherModel model;
   final void Function(int earned) onTick;
   final bool Function() reducedMotion;
+  final void Function(double dt, List<String> events)? onSounds;
   final List<_FallingCoin> _falling = [];
   final Map<String, Image> toys = {};
   @override
@@ -619,7 +620,7 @@ class PusherGame extends FlameGame {
     super.onRemove();
   }
 
-  PusherGame(this.model, this.onTick, this.reducedMotion);
+  PusherGame(this.model, this.onTick, this.reducedMotion, {this.onSounds});
   @override
   Color backgroundColor() => const Color(0xFFF6DFC0);
   @override
@@ -629,6 +630,8 @@ class PusherGame extends FlameGame {
       for (final c in model.coins) c: (c.body.position.x, c.body.position.y),
     };
     final earned = model.update(dt);
+    onSounds?.call(dt.clamp(0, .1), model.soundEvents);
+    model.soundEvents.clear();
     if (reducedMotion()) {
       _falling.clear();
     } else {
