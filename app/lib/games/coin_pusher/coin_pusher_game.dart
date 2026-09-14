@@ -9,6 +9,7 @@ import '../../shell/settings.dart';
 import '../../shell/settings_screen.dart';
 import 'pusher_game.dart';
 import 'pusher_model.dart';
+import 'pusher_audio.dart';
 
 class CoinPusherDefinition implements GameDefinition {
   @override
@@ -55,6 +56,7 @@ class _PusherScreenState extends State<PusherScreen>
     with WidgetsBindingObserver {
   final _prefs = SharedPreferencesAsync();
   PusherGame? _game;
+  late final PusherAudio _audio;
   Timer? _timer;
   Future<void> _writes = Future.value();
   String? _error;
@@ -67,6 +69,7 @@ class _PusherScreenState extends State<PusherScreen>
   @override
   void initState() {
     super.initState();
+    _audio = PusherAudio(widget.settings);
     WidgetsBinding.instance.addObserver(this);
     _load();
   }
@@ -87,6 +90,7 @@ class _PusherScreenState extends State<PusherScreen>
           () =>
               widget.settings.reducedMotion.value ||
               (mounted && MediaQuery.disableAnimationsOf(context)),
+          onSounds: _audio.update,
         );
       });
       if (_paused) _game!.pauseEngine();
@@ -106,7 +110,6 @@ class _PusherScreenState extends State<PusherScreen>
   void _tick(int earned) {
     if (earned > 0 && mounted) {
       widget.settings.hapticTap();
-      unawaited(widget.settings.playSound('pusher/coin.wav'));
       setState(
         () => _message = _game!.model.justRewards.isNotEmpty
             ? _game!.model.justRewards.join(' · ')
@@ -141,6 +144,7 @@ class _PusherScreenState extends State<PusherScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
+      _audio.stop();
       _backgroundPauses++;
       _game?.pauseEngine();
       if (mounted) setState(() => _paused = true);
@@ -149,6 +153,7 @@ class _PusherScreenState extends State<PusherScreen>
   }
 
   Future<void> _exit() async {
+    _audio.stop();
     _game?.pauseEngine();
     setState(() => _paused = true);
     await _save();
@@ -163,6 +168,7 @@ class _PusherScreenState extends State<PusherScreen>
     final game = _game;
     if (game == null) return;
     final wasPaused = _paused;
+    _audio.stop();
     game.pauseEngine();
     setState(() => _paused = true);
     final confirmed = await showDialog<bool>(
@@ -211,12 +217,12 @@ class _PusherScreenState extends State<PusherScreen>
     );
     if (ok) {
       widget.settings.hapticTap();
-      unawaited(widget.settings.playSound('pusher/coin.wav'));
       _save();
     }
   }
 
   Future<void> _openCollection() async {
+    _audio.stop();
     final game = _game;
     if (game == null) return;
     final wasPaused = _paused;
@@ -370,6 +376,7 @@ class _PusherScreenState extends State<PusherScreen>
 
   @override
   void dispose() {
+    _audio.dispose();
     _timer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -397,6 +404,7 @@ class _PusherScreenState extends State<PusherScreen>
               tooltip: 'Settings',
               icon: const Icon(Icons.settings),
               onPressed: () async {
+                _audio.stop();
                 game?.pauseEngine();
                 setState(() => _paused = true);
                 await _save();
@@ -454,6 +462,7 @@ class _PusherScreenState extends State<PusherScreen>
                                     onPressed: () {
                                       setState(() => _paused = !_paused);
                                       if (_paused) {
+                                        _audio.stop();
                                         game.pauseEngine();
                                         _save();
                                       } else {

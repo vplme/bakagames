@@ -38,8 +38,20 @@ not leave exposed dark triangles at the front corners. The pastel cabinet uses
 mint felt, blush trim, and a rounded cream-edged pink sign with bear mascots.
 Title lettering is laid out at pixel scale; decorative yellow bulbs are removed.
 The library cover and eleven plush sprites are original AI-generated artwork; see
-[artwork.md](artwork.md) for prompts and asset preparation. `app/assets/pusher/coin.wav` is an original synthesized
-decaying two-tone chime (1800/2900 Hz, 22050 Hz mono); no reference assets copied.
+[artwork.md](artwork.md) for prompts and asset preparation. Sound effects are
+original local synthesis; no reference recordings are copied. Regenerate them
+with `python3 docs/pusher/generate_audio.py` (standard library only).
+
+The sound palette includes metallic chute clicks and tray clinks, two fuller
+cascade tiers, valuable-coin chimes, soft toy arrivals and collection melodies,
+quieter coin/toy side losses, reward appearances, bonuses and toy unlocks.
+Physics emits transient events for actual spawns and exits; these do not alter
+saved progress. The mixer groups events over 90 ms and builds coin cascades
+across gaps shorter than 650 ms, using object counts rather than payout values.
+Five bounded audio voices separate chute, tray, toys, side losses and rewards.
+App sound preferences apply immediately, and pausing, leaving or backgrounding
+stops playback. Assets are mono 22.05 kHz PCM with faded tails and headroom.
+The previous `coin.wav` is retained but no longer used by Pocket Pusher.
 
 Tests cover one-time payouts, side losses, bonuses, spending, refill,
 serialization, sustained pushing, and 320×568 layout at 130% text. Device GPU
