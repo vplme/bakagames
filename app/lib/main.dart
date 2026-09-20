@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'games/bird_sort/bird_sort_game.dart';
 import 'games/coin_pusher/coin_pusher_game.dart';
 import 'games/match_three/match_three_game.dart';
+import 'games/mergefront/mergefront_game.dart';
 import 'shell/home_screen.dart';
 import 'shell/progress_store.dart';
 import 'shell/registry.dart';
@@ -14,6 +15,7 @@ Future<void> main() async {
   await settings.load();
   final store = SharedPrefsProgressStore();
   final registry = GameRegistry([
+    mergefrontEntry(settings: settings),
     coinPusherEntry(settings: settings),
     birdSortEntry(store: store, settings: settings),
     matchThreeEntry(store: store, settings: settings),
