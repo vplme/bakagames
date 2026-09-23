@@ -69,8 +69,8 @@ class _BirdSortBoardState extends State<BirdSortBoard>
             final rows = c.state.branches.length;
             final rowHeight = box.maxHeight / rows;
             final birdSize = math.min(
-              67.0,
-              math.min((box.maxWidth - 86) / c.level.capacity, rowHeight * .82),
+              90.0,
+              math.min((box.maxWidth - 64) / c.level.capacity, rowHeight * .82),
             );
             final span = birdSize * c.level.capacity;
             Offset origin(int branch, int slot) {

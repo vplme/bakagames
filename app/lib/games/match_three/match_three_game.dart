@@ -109,6 +109,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
   @override
   void initState() {
     super.initState();
+    widget.settings.recordPlay('match_three');
     widget.settings.reducedMotion.addListener(_settingsChanged);
     _load();
   }
@@ -389,7 +390,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                         : shown == null || game == null
                         ? const Center(child: CircularProgressIndicator())
                         : SingleChildScrollView(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(4),
                             child: Column(
                               children: [
                                 Row(
@@ -421,15 +422,6 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                               letterSpacing: 2.6,
                                             ),
                                           ),
-                                          Text(
-                                            'a little moment of happy',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              color: Color(0xFF926E87),
-                                              fontSize: 10,
-                                              letterSpacing: .6,
-                                            ),
-                                          ),
                                         ],
                                       ),
                                     ),
@@ -453,7 +445,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 4),
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -475,7 +467,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                           Text(
                                             'Level ${widget.levelIndex + 1}',
                                             style: const TextStyle(
-                                              fontSize: 34,
+                                              fontSize: 22,
                                               height: 1.2,
                                               fontWeight: FontWeight.w800,
                                               color: sweetsInk,
@@ -506,11 +498,6 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                       ),
                                     ),
                                   ],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  sweetLevels[widget.levelIndex].tip,
-                                  textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 12),
                                 Wrap(
@@ -544,12 +531,12 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                         ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 6),
                                 LayoutBuilder(
                                   builder: (context, constraints) {
                                     final width = constraints.maxWidth.clamp(
                                       336.0,
-                                      448.0,
+                                      620.0,
                                     );
                                     final cell = width / 7;
                                     return Column(
@@ -887,6 +874,20 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                           onPressed: _busy || game.won
                                               ? null
                                               : _hintMove,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: ExpansionTile(
+                                    title: const Text('Level guide'),
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Text(
+                                          sweetLevels[widget.levelIndex].tip,
                                         ),
                                       ),
                                     ],

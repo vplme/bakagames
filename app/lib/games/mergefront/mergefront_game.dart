@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:game_core/game_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../shell/registry.dart';
+import '../shared/arcade_home.dart';
 import '../../shell/settings.dart';
 import 'art.dart';
 import 'audio.dart';
@@ -27,7 +28,7 @@ GameEntry mergefrontEntry({required AppSettings settings}) => GameEntry(
   subtitle: 'Tiny squad. Big breakthroughs. Your coast to reclaim.',
   accentColor: cyan,
   buildPreview: (_) => const SquadRusherCover(),
-  buildHomeScreen: (_) => MergefrontScreen(settings: settings),
+  buildHomeScreen: (_) => _SquadHome(settings: settings),
   buildLevelSelect: (_) => MergefrontScreen(settings: settings),
   buildPlayScreen: (_, level) =>
       MergefrontScreen(settings: settings, initialLevel: level),
@@ -54,11 +55,13 @@ class MergefrontScreen extends StatefulWidget {
   final AppSettings settings;
   final MergefrontStore? store;
   final int initialLevel;
+  final bool autoStart;
   const MergefrontScreen({
     super.key,
     required this.settings,
     this.store,
     this.initialLevel = 0,
+    this.autoStart = false,
   });
   @override
   State<MergefrontScreen> createState() => _MergefrontScreenState();
@@ -111,6 +114,7 @@ class _MergefrontScreenState extends State<MergefrontScreen>
         error = null;
       });
       audio = MergefrontAudio(widget.settings, loaded);
+      if (widget.autoStart) _start();
     } catch (_) {
       if (mounted) {
         setState(
@@ -185,6 +189,7 @@ class _MergefrontScreenState extends State<MergefrontScreen>
 
   void _start() {
     if (locked || profile == null) return;
+    widget.settings.recordPlay('mergefront');
     final p = profile!;
     setState(() {
       run = Run(
@@ -279,6 +284,7 @@ class _MergefrontScreenState extends State<MergefrontScreen>
       child: Scaffold(
         backgroundColor: cream,
         appBar: AppBar(
+          toolbarHeight: 48,
           backgroundColor: cream,
           title: const Text(
             'Squad Rusher',
@@ -601,9 +607,27 @@ class _MergefrontScreenState extends State<MergefrontScreen>
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  '${r.squad.length} SQUAD • ${r.strength.ceil()} HP',
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${r.squad.length} SQUAD • ${r.strength.ceil()}/${r.squad.fold<double>(0, (sum, s) => sum + s.maxHp).ceil()} HP',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    if (r.armor || r.shield > 0)
+                      Text(
+                        [
+                          if (r.armor)
+                            'Armor ${r.armoredCount}/${r.squad.length} • −35% per troop',
+                          if (r.shield > 0) 'Shield ${r.shield.ceil()}',
+                        ].join(' • '),
+                        key: const Key('mergefrontDefenses'),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                  ],
                 ),
               ),
               IconButton(
@@ -635,7 +659,7 @@ class _MergefrontScreenState extends State<MergefrontScreen>
                 LinearProgressIndicator(
                   key: const Key('mergefrontBaseBar'),
                   value: r.baseHealth / Run.maxBaseHealth,
-                  minHeight: 10,
+                  minHeight: 5,
                   color: r.baseHealth <= 25 ? coral : cyan,
                   backgroundColor: const Color(0xFFE2D5B4),
                 ),
@@ -649,14 +673,6 @@ class _MergefrontScreenState extends State<MergefrontScreen>
             value: (r.time / r.level.bossAt).clamp(0, 1),
             color: cyan,
             backgroundColor: const Color(0xFFE2D5B4),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(6),
-          child: Text(
-            '${r.damage.toStringAsFixed(1)}× power • ${r.rate.toStringAsFixed(1)}× rate${r.spread ? ' • Spread' : ''}${r.pierce ? ' • Pierce' : ''}${r.armor ? ' • Armor' : ''}${r.shield > 0 ? ' • Shield ${r.shield.round()}' : ''}',
-            style: const TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
           ),
         ),
         if (r.boss != null)
@@ -677,8 +693,8 @@ class _MergefrontScreenState extends State<MergefrontScreen>
           ),
         Expanded(
           child: Center(
-            child: AspectRatio(
-              aspectRatio: .70,
+            child: SizedBox(
+              width: double.infinity,
               child: LayoutBuilder(
                 builder: (context, constraints) => Listener(
                   key: const Key('mergefrontBattlefield'),
@@ -761,6 +777,10 @@ class _MergefrontScreenState extends State<MergefrontScreen>
                                           fontWeight: FontWeight.w900,
                                         ),
                                       ),
+                                      Text(
+                                        '${r.damage.toStringAsFixed(1)}× power • ${r.rate.toStringAsFixed(1)}× rate${r.spread ? ' • Spread' : ''}${r.pierce ? ' • Pierce' : ''}${r.armor ? ' • Armor ${r.armoredCount}/${r.squad.length}' : ''}${r.shield > 0 ? ' • Shield ${r.shield.round()}' : ''}',
+                                        style: const TextStyle(color: cream),
+                                      ),
                                       const SizedBox(height: 12),
                                       FilledButton(
                                         onPressed: () => _pause(false),
@@ -802,8 +822,15 @@ class _MergefrontScreenState extends State<MergefrontScreen>
           child: Semantics(
             liveRegion: true,
             child: Text(
-              r.damageNoticeRemaining > 0
+              r.warnings.isNotEmpty
+                  ? 'Incoming strike! Steer out of the red lanes.'
+                  : r.enemies.any((e) => e.active && e.aiming)
+                  ? 'Shooter aiming! Move away from the orange target.'
+                  : r.damageNoticeRemaining > 0
                   ? r.damageNotice
+                  : r.laneStrikes.isNotEmpty &&
+                        r.laneStrikes.every((s) => !s.hit)
+                  ? 'Dodged! Your squad is safe.'
                   : r.approaching == null
                   ? (r.time < 6
                         ? 'Stop enemies in every lane. Escapes damage your base.'
@@ -994,5 +1021,119 @@ class _MergefrontScreenState extends State<MergefrontScreen>
       border: Border.all(color: const Color(0xFFE6DABB)),
     ),
     child: child,
+  );
+}
+
+class _SquadHome extends StatefulWidget {
+  final AppSettings settings;
+  const _SquadHome({required this.settings});
+  @override
+  State<_SquadHome> createState() => _SquadHomeState();
+}
+
+class _SquadHomeState extends State<_SquadHome> {
+  late Future<Profile> _future = MergefrontStore().load();
+  void _reload() {
+    if (mounted) setState(() => _future = MergefrontStore().load());
+  }
+
+  Widget _portrait(Role role) =>
+      FittedBox(fit: BoxFit.contain, child: UnitPortrait(role, 1));
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Profile>(
+    future: _future,
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) {
+        return Scaffold(
+          body: Center(
+            child: snapshot.hasError
+                ? TextButton(
+                    onPressed: _reload,
+                    child: const Text('Retry loading your squad'),
+                  )
+                : const CircularProgressIndicator(),
+          ),
+        );
+      }
+      final profile = snapshot.data!;
+      return ArcadeHome(
+        title: 'Squad Rusher',
+        subtitle:
+            'Tiny squad. Big personalities.\nA whole little coast to reclaim.',
+        action: 'Play mission ${profile.unlocked + 1}',
+        summary:
+            '${profile.completed.length} missions completed · your squad, your pace',
+        accent: ink,
+        background: cream,
+        settings: widget.settings,
+        preview: ArcadeCharacters(
+          shelf: const Color(0xFFB7B485),
+          characters: [
+            _portrait(Role.scatter),
+            _portrait(Role.rifle),
+            _portrait(Role.heavy),
+          ],
+        ),
+        progressArt: _portrait(Role.support),
+        progressTitle: profile.slots == 6
+            ? 'Your squad is ready!'
+            : 'A bigger squad is getting closer!',
+        progressDetail: profile.slots == 6
+            ? 'All 6 squad slots unlocked'
+            : '${3 - profile.completed.length % 3} new victories to the next slot · ${profile.slots}/6 slots',
+        progress: profile.slots == 6 ? 1 : (profile.completed.length % 3) / 3,
+        firstLabel: 'Level path',
+        firstIcon: Icons.explore_outlined,
+        secondLabel: 'My squad',
+        secondIcon: Icons.favorite_border_rounded,
+        footer: 'MERGE • RUSH • DISCOVER',
+        onReturn: _reload,
+        play: (_) => MergefrontScreen(
+          settings: widget.settings,
+          initialLevel: profile.unlocked,
+          autoStart: true,
+        ),
+        firstDestination: (_) => Scaffold(
+          backgroundColor: cream,
+          appBar: AppBar(title: const Text('Level path')),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              for (final level in Level.all)
+                Card(
+                  child: ListTile(
+                    leading: CircleAvatar(child: Text('${level.index + 1}')),
+                    title: Text(level.name),
+                    subtitle: Text(level.style.label),
+                    trailing: Icon(
+                      profile.completed.contains(level.index)
+                          ? Icons.check_circle
+                          : level.index <= profile.unlocked
+                          ? Icons.play_arrow_rounded
+                          : Icons.lock_outline,
+                    ),
+                    enabled: level.index <= profile.unlocked,
+                    onTap: level.index > profile.unlocked
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => MergefrontScreen(
+                                settings: widget.settings,
+                                initialLevel: level.index,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        secondDestination: (_) => MergefrontScreen(
+          settings: widget.settings,
+          initialLevel: profile.unlocked,
+        ),
+      );
+    },
   );
 }

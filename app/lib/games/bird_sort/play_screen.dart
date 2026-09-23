@@ -55,6 +55,7 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
   @override
   void initState() {
     super.initState();
+    widget.settings?.recordPlay('bird_sort');
     final debug = widget.debugLevel;
     final index = widget.levelIndex;
     _levelFuture = debug != null ? Future.value(debug) : _generateLevel(index);
@@ -177,7 +178,7 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                       MediaQuery.sizeOf(context).height < 700 ||
                       MediaQuery.textScalerOf(context).scale(1) > 1.2;
                   final board = Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: BirdSortBoard(
                       controller: c,
                       reducedMotion: _reduced,
@@ -207,14 +208,6 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                                       letterSpacing: 2.6,
                                     ),
                                   ),
-                                  Text(
-                                    'a little moment of happy',
-                                    style: TextStyle(
-                                      color: Color(0xFF819181),
-                                      fontSize: 10,
-                                      letterSpacing: .6,
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),
@@ -235,7 +228,7 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
+                        padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -257,7 +250,7 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                                   Text(
                                     'Level ${widget.levelIndex + 1}',
                                     style: const TextStyle(
-                                      fontSize: 34,
+                                      fontSize: 22,
                                       height: 1.2,
                                       fontWeight: FontWeight.w800,
                                       color: aviaryInk,
@@ -289,7 +282,7 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 6),
+                        padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
                         child: Row(
                           children: [
                             for (var i = 0; i < c.level.colourCount; i++)

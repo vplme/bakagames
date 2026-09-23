@@ -212,7 +212,7 @@ class Gate {
     GateKind.spread => 'SPREAD SHOT',
     GateKind.pierce => 'PIERCING ROUNDS',
     GateKind.heal => 'HEAL $value%',
-    GateKind.armor => 'ARMORED UNITS',
+    GateKind.armor => '+1 ARMORED TROOP',
     GateKind.sacrifice => '−$value • 2× DAMAGE',
     GateKind.elite => 'ELITE • −25% RATE',
   };
@@ -227,7 +227,7 @@ class Gate {
       '${(run.damage * (1 + value / 100) * 100).round()}% shot damage',
     GateKind.spread => 'Hits up to 3 nearby enemies',
     GateKind.pierce => 'Bypass shields • hit enemies behind',
-    GateKind.armor => '35% less incoming damage',
+    GateKind.armor => 'One more troop takes 35% less damage',
     GateKind.sacrifice =>
       '${max(1, run.squad.length - value)} units • double damage',
     GateKind.elite => 'Tier 4 heavy • slower squad',
@@ -285,7 +285,12 @@ class Level {
     Level(2, 451, 'Coral Switchback', 'Amber stripes warn of incoming fire.'),
     Level(3, 1103, 'Pylon Gardens', 'Support shields absorb incoming damage.'),
     Level(4, 2027, 'The Brass Bastion', 'Watch the boss lanes. Keep moving.'),
-    Level(5, 3019, 'Tidepool Relay', 'Build a balanced formation.'),
+    Level(
+      5,
+      3019,
+      'Tidepool Relay',
+      'Shooters lock their aim. Move after the orange line appears.',
+    ),
     Level(6, 4021, 'Shellstone Rise', 'Spread shots clear swarms.'),
     Level(7, 5011, 'Copper Causeway', 'Trade safety for firepower.'),
     Level(8, 6011, 'Limewater Locks', 'Heavy shots buy breathing room.'),
@@ -321,12 +326,19 @@ class Enemy {
   EnemyKind kind = EnemyKind.rusher;
   double x = 0, y = 0, hp = 0, maxHp = 0, clock = 0;
   int pattern = 0;
+  bool aiming = false;
+  double aimX = .5;
 }
 
 class Shot {
   bool active = false;
   double x = 0, y = 0, tx = 0, ty = 0, life = 0;
   Role role = Role.rifle;
+}
+
+class EnemyBullet {
+  bool active = false;
+  double x = 0, y = 0, vx = 0, vy = 0, damage = 0;
 }
 
 class Spark {
@@ -339,6 +351,7 @@ class Soldier {
   final Role role;
   final int tier;
   double hp, cooldown = 0;
+  bool armored = false;
   final double maxHp;
   double formationX = .5, formationY = .95, recoil = 0;
   Soldier(this.role, this.tier, this.hp) : maxHp = hp;
@@ -356,6 +369,21 @@ class Warning {
   double remaining;
   final double width;
   Warning(this.x, this.remaining, [this.width = .19]);
+}
+
+/// Brief visual record of a resolved attack lane; independent of damage rules.
+class LaneStrike {
+  final double x, width;
+  final bool hit;
+  final double hpLost, shieldLost;
+  double remaining = .65;
+  LaneStrike(
+    this.x,
+    this.width,
+    this.hit, {
+    this.hpLost = 0,
+    this.shieldLost = 0,
+  });
 }
 
 /// Fixed-step, bounded simulation. No Flutter, individual pathfinding, or async
@@ -397,13 +425,18 @@ class Run {
   final List<Soldier> squad = [];
   final enemies = List.generate(48, (_) => Enemy());
   final shots = List.generate(72, (_) => Shot());
+  final enemyBullets = List.generate(24, (_) => EnemyBullet());
   final sparks = List.generate(36, (_) => Spark());
   final List<GatePair> gates = [];
   final List<Warning> warnings = [];
+  final List<LaneStrike> laneStrikes = [];
   double time = 0, x = .5, targetX = .5, damage = 1, rate = 1, shield = 0;
   double _accumulator = 0, _spawn = 5, _support = 0;
   int _wave = 0;
-  bool spread = false, pierce = false, armor = false;
+  bool spread = false, pierce = false;
+  int get armoredCount => squad.where((s) => s.armored).length;
+  bool get armor => armoredCount > 0;
+  bool get fullyArmored => squad.isNotEmpty && armoredCount == squad.length;
   bool finished = false, won = false, rewarded = false, bossSpawned = false;
   int kills = 0, salvage = 0, gateCount = 0;
   String event = 'Drag below to steer', eventKind = 'start';
@@ -479,7 +512,8 @@ class Run {
           s.hp = min(s.maxHp, s.hp + s.maxHp * gate.value / 100);
         }
       case GateKind.armor:
-        armor = true;
+        final troop = squad.where((s) => !s.armored).firstOrNull;
+        if (troop != null) troop.armored = true;
       case GateKind.sacrifice:
         final count = min(gate.value, squad.length - 1);
         if (count > 0) squad.removeRange(squad.length - count, squad.length);
@@ -509,15 +543,16 @@ class Run {
     if (finished || amount <= 0) return;
     final before = strength;
     final unitsBefore = squad.length;
-    if (armor) amount *= .65;
     final absorbed = min(shield, amount);
     shield -= absorbed;
     amount -= absorbed;
     while (amount > 0 && squad.isNotEmpty) {
       final s = squad.last;
-      final hit = min(s.hp, amount);
+      final multiplier = s.armored ? .65 : 1.0;
+      final hit = min(s.hp, amount * multiplier);
       s.hp -= hit;
-      amount -= hit;
+      // Consume incoming damage, so armor never protects the next troop.
+      amount = max(0, amount - hit / multiplier);
       if (s.hp <= 0) squad.removeLast();
     }
     final lost = unitsBefore - squad.length;
@@ -571,14 +606,14 @@ class Run {
         Gate useful(Gate gate) {
           if (gate.kind == GateKind.heal &&
               squad.every((s) => s.hp >= s.maxHp)) {
-            return armor
+            return fullyArmored
                 ? const Gate(GateKind.elite, 1)
                 : const Gate(GateKind.armor, 1);
           }
           final redundant = switch (gate.kind) {
             GateKind.spread => spread,
             GateKind.pierce => pierce,
-            GateKind.armor => armor,
+            GateKind.armor => fullyArmored,
             _ => false,
           };
           return redundant ? const Gate(GateKind.damage, 30) : gate;
@@ -623,10 +658,26 @@ class Run {
         if (s.life <= 0) s.active = false;
       }
     }
+    for (final strike in laneStrikes) {
+      strike.remaining -= dt;
+    }
+    laneStrikes.removeWhere((strike) => strike.remaining <= 0);
     for (final w in warnings) {
       w.remaining -= dt;
-      if (w.remaining <= 0 && (x - w.x).abs() < w.width) {
-        hurt(38 + level.index * 2.5);
+      if (w.remaining <= 0) {
+        final hit = (x - w.x).abs() < w.width;
+        final hpBefore = strength;
+        final shieldBefore = shield;
+        if (hit) hurt(60 + level.index * 2.5);
+        laneStrikes.add(
+          LaneStrike(
+            w.x,
+            w.width,
+            hit,
+            hpLost: hpBefore - strength,
+            shieldLost: shieldBefore - shield,
+          ),
+        );
       }
     }
     warnings.removeWhere((w) => w.remaining <= 0);
@@ -651,11 +702,18 @@ class Run {
       final kind = switch (phase) {
         1 => time > 35 ? EnemyKind.shield : EnemyKind.rusher,
         2 => EnemyKind.swarm,
-        3 => time > 45 ? EnemyKind.ranged : EnemyKind.rusher,
+        3 =>
+          time > (level.index >= 5 ? 18 : 45)
+              ? EnemyKind.ranged
+              : EnemyKind.rusher,
         4 => time > 60 ? EnemyKind.heavy : EnemyKind.swarm,
         _ => EnemyKind.rusher,
       };
-      final count = kind == EnemyKind.swarm ? 5 : (time > 30 ? 3 : 2);
+      final count = kind == EnemyKind.swarm
+          ? 5
+          : kind == EnemyKind.ranged && level.index >= 5
+          ? (level.index >= 9 ? 2 : 1)
+          : (time > 30 ? 3 : 2);
       for (var i = 0; i < count; i++) {
         spawn(kind, (lane + (i - (count - 1) / 2) * .085).clamp(.12, .88));
       }
@@ -699,7 +757,26 @@ class Run {
       } else {
         e.y +=
             dt * (e.kind == EnemyKind.rusher ? .12 : .060 + level.index * .001);
-        if ((e.kind == EnemyKind.ranged || e.kind == EnemyKind.pylon) &&
+        if (e.kind == EnemyKind.ranged && level.index >= 5) {
+          if (!e.aiming && e.clock >= 3 && e.y < .65) {
+            e.aiming = true;
+            e.aimX = x;
+          }
+          if (e.aiming && e.clock >= 3.8) {
+            final bullet = enemyBullets.where((b) => !b.active).firstOrNull;
+            if (bullet != null) {
+              bullet
+                ..active = true
+                ..x = e.x
+                ..y = e.y
+                ..vx = (e.aimX - e.x) / 1.2
+                ..vy = (.80 - e.y) / 1.2
+                ..damage = 18 + level.index * .8;
+            }
+            e.aiming = false;
+            e.clock = 0;
+          }
+        } else if ((e.kind == EnemyKind.ranged || e.kind == EnemyKind.pylon) &&
             e.clock > 4 &&
             warnings.length < 6) {
           e.clock = 0;
@@ -721,6 +798,24 @@ class Run {
           if (finished) return;
         }
       }
+    }
+    for (final bullet in enemyBullets) {
+      if (!bullet.active) continue;
+      final previousY = bullet.y;
+      final previousX = bullet.x;
+      bullet.x += bullet.vx * dt;
+      bullet.y += bullet.vy * dt;
+      if (previousY < .80 && bullet.y >= .80) {
+        final crossingX =
+            previousX +
+            (bullet.x - previousX) * (.80 - previousY) / (bullet.y - previousY);
+        if ((x - crossingX).abs() < .13) {
+          bullet.active = false;
+          hurt(bullet.damage);
+          if (finished) return;
+        }
+      }
+      if (bullet.y > 1.05) bullet.active = false;
     }
     for (var i = 0; i < squad.length; i++) {
       final s = squad[i];
@@ -853,6 +948,8 @@ class Run {
       ..hp = hp
       ..maxHp = hp
       ..clock = 0
-      ..pattern = 0;
+      ..pattern = 0
+      ..aiming = false
+      ..aimX = .5;
   }
 }

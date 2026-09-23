@@ -10,9 +10,134 @@ void advance(Run run, double seconds) {
 }
 
 void main() {
+  Run shooterScenario(int level) {
+    final r = fresh(level);
+    r.gates.clear();
+    for (final soldier in r.squad) {
+      soldier.cooldown = 100;
+    }
+    r.spawn(EnemyKind.ranged, .5);
+    r.enemies.first
+      ..y = .2
+      ..clock = 2.99
+      ..hp = 10000;
+    return r;
+  }
+
+  test('mission six shooters lock aim and launch dodgeable bullets', () {
+    for (final dodge in [false, true]) {
+      final r = shooterScenario(5);
+      final hp = r.strength;
+      advance(r, .05);
+      expect(r.enemies.first.aiming, isTrue);
+      expect(r.enemies.first.aimX, .5);
+      if (dodge) r.steer(.78);
+      advance(r, .8);
+      expect(r.enemyBullets.where((b) => b.active), hasLength(1));
+      expect(r.warnings, isEmpty);
+      advance(r, 1.3);
+      expect(r.strength, closeTo(hp - (dodge ? 0 : 22), .001));
+      advance(r, 1);
+      expect(r.enemyBullets.where((b) => b.active), isEmpty);
+    }
+  });
+
+  test('early ranged enemies keep lane attacks and killing cancels windup', () {
+    final early = shooterScenario(4);
+    advance(early, 1.1);
+    expect(early.enemyBullets.any((b) => b.active), isFalse);
+    expect(early.warnings, isNotEmpty);
+    final later = shooterScenario(5);
+    advance(later, .05);
+    later.enemies.first.active = false;
+    advance(later, 1);
+    expect(later.enemyBullets.any((b) => b.active), isFalse);
+  });
+
+  test('enemy bullets use troop armor and cannot damage twice', () {
+    final r = shooterScenario(5)..squad.last.armored = true;
+    final hp = r.strength;
+    advance(r, 2.1);
+    expect(r.strength, closeTo(hp - 22 * .65, .001));
+    advance(r, .3);
+    expect(r.strength, closeTo(hp - 22 * .65, .001));
+  });
+
+  test('lane impact reports shield absorption and troop health separately', () {
+    final r = fresh()..shield = 24;
+    r.warnings.add(Warning(r.x, .02));
+    advance(r, .05);
+    expect(r.laneStrikes.single.shieldLost, 24);
+    expect(r.laneStrikes.single.hpLost, 36);
+    expect(r.squad.last.hp, 4);
+    expect(r.damageNotice, contains('SQUAD −36 HP'));
+    expect(r.damageNotice, contains('shield −24'));
+  });
+
+  test('armor pickups equip one new troop and recruits start unarmored', () {
+    final r = fresh();
+    r.apply(const Gate(GateKind.armor, 1));
+    expect(r.squad.map((s) => s.armored), [true, false, false]);
+    r.apply(const Gate(GateKind.armor, 1));
+    expect(r.squad.map((s) => s.armored), [true, true, false]);
+    r.apply(const Gate(GateKind.armor, 1));
+    expect(r.fullyArmored, isTrue);
+    r.apply(const Gate(GateKind.armor, 1));
+    expect(r.armoredCount, 3);
+    r.recruit(1);
+    expect(r.squad.last.armored, isFalse);
+    expect(r.fullyArmored, isFalse);
+    r.apply(const Gate(GateKind.armor, 1));
+    expect(r.armoredCount, 4);
+  });
+
+  test('armor reduces only its troop damage including lethal spillover', () {
+    final r = fresh();
+    r.apply(const Gate(GateKind.armor, 1));
+    r.hurt(10);
+    expect(r.squad.last.hp, 30); // Unarmored troop takes full damage.
+    r.squad.last.armored = true;
+    r.hurt(30 / .65 + 10);
+    expect(r.squad.length, 2);
+    expect(r.squad.last.hp, closeTo(30, .001));
+    expect(r.armoredCount, 1); // Armor stays with the surviving first troop.
+  });
+
+  test('repeat armor gates remain available until all troops are armored', () {
+    final r = fresh()..apply(const Gate(GateKind.armor, 1));
+    r.gates.clear();
+    r.gates.add(
+      GatePair(
+        7,
+        const Gate(GateKind.armor, 1),
+        const Gate(GateKind.damage, 30),
+      ),
+    );
+    r.step(1 / 60);
+    expect(r.gates.single.left.kind, GateKind.armor);
+  });
+
+  test(
+    'attack lanes resolve once and retain hit or dodge feedback briefly',
+    () {
+      for (final inLane in [true, false]) {
+        final r = fresh()..squad.last.armored = true;
+        final hp = r.strength;
+        r.warnings.add(Warning(inLane ? .5 : .15, .02, .1));
+        advance(r, .05);
+        expect(r.warnings, isEmpty);
+        expect(r.laneStrikes.single.hit, inLane);
+        expect(r.strength, closeTo(hp - (inLane ? 60 * .65 : 0), .001));
+        advance(r, .7);
+        expect(r.laneStrikes, isEmpty);
+        expect(r.strength, closeTo(hp - (inLane ? 60 * .65 : 0), .001));
+      }
+    },
+  );
+
   test('escaped enemies damage the base once and bypass squad defenses', () {
     final r = fresh()
-      ..armor = true
+      ..squad.last.armored = true
       ..shield = 100;
     final hp = r.strength;
     r.spawn(EnemyKind.rusher, .88);
@@ -250,7 +375,7 @@ void main() {
     },
   );
   test('armor reduces damage; no units ends the run', () {
-    final r = fresh()..armor = true;
+    final r = fresh()..squad.last.armored = true;
     final hp = r.strength;
     r.hurt(10);
     expect(r.strength, hp - 6.5);

@@ -31,11 +31,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _reload() async {
+    await widget.settings.loadRecency(
+      widget.registry.games.map((e) => e.definition.id),
+    );
     for (final entry in widget.registry.games) {
       final progress = await widget.store.load(entry.definition.id);
       if (!mounted) return;
       setState(() => _progress[entry.definition.id] = progress);
     }
+  }
+
+  List<GameEntry> get _orderedGames {
+    final games = [...widget.registry.games];
+    games.sort((a, b) {
+      final order = (widget.settings.lastPlayed[b.definition.id] ?? 0)
+          .compareTo(widget.settings.lastPlayed[a.definition.id] ?? 0);
+      return order != 0
+          ? order
+          : widget.registry.games
+                .indexOf(a)
+                .compareTo(widget.registry.games.indexOf(b));
+    });
+    return games;
   }
 
   Future<void> _open(GameEntry entry) async {
@@ -147,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     spacing: 20,
                     runSpacing: 20,
                     children: [
-                      for (final entry in widget.registry.games)
+                      for (final entry in _orderedGames)
                         SizedBox(
                           width: width,
                           child: _GameCard(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:game_core/game_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../shell/registry.dart';
+import '../shared/arcade_home.dart';
 import '../../shell/settings.dart';
 import '../../shell/settings_screen.dart';
 import 'pusher_game.dart';
@@ -27,7 +28,7 @@ GameEntry coinPusherEntry({required AppSettings settings}) => GameEntry(
   category: 'Arcade',
   subtitle: 'A cosy little arcade. A shelf full of friends.',
   accentColor: teal,
-  buildHomeScreen: (_) => PusherScreen(settings: settings),
+  buildHomeScreen: (_) => _PusherHome(settings: settings),
   buildPlayScreen: (_, _) => PusherScreen(settings: settings),
   buildLevelSelect: (_) => PusherScreen(settings: settings),
   buildPreview: (_) => const _Preview(),
@@ -69,6 +70,7 @@ class _PusherScreenState extends State<PusherScreen>
   @override
   void initState() {
     super.initState();
+    widget.settings.recordPlay('coin_pusher');
     _audio = PusherAudio(widget.settings);
     WidgetsBinding.instance.addObserver(this);
     _load();
@@ -268,112 +270,6 @@ class _PusherScreenState extends State<PusherScreen>
     }
   }
 
-  Widget _collectionShelf(PusherModel model) => Container(
-    margin: const EdgeInsets.symmetric(vertical: 10),
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: const Color(0xFFFFECD5),
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: const Color(0xFFE8C5A1)),
-    ),
-    child: Column(
-      children: [
-        const Text(
-          'Your cuddly collection',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF684A38),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          model.nextPrizeIndex == null
-              ? 'All 8 milestones reached · All 11 toys unlocked!'
-              : '${model.collected} / ${prizeUnlockCoins[model.nextPrizeIndex!]} coins'
-                    ' · Next: ${prizeNames[model.nextPrizeIndex!]}',
-          key: const Key('pusherUnlockProgress'),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: model.nextPrizeIndex == null
-              ? 1
-              : (model.collected % 250) / 250,
-          color: teal,
-          backgroundColor: const Color(0xFFE6D8B4),
-          semanticsLabel: 'Progress to the next toy unlock',
-        ),
-        const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth < 330 ? 2 : 3;
-            final width = (constraints.maxWidth - (columns - 1) * 8) / columns;
-            return Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (var i = 0; i < prizeIds.length; i++)
-                  SizedBox(
-                    width: width,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF7E9),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          Opacity(
-                            opacity: model.collected >= prizeUnlockCoins[i]
-                                ? 1
-                                : .4,
-                            child: Image.asset(
-                              'assets/pusher/${prizeIds[i]}.webp',
-                              height: 64,
-                              semanticLabel: prizeNames[i],
-                            ),
-                          ),
-                          Text(
-                            prizeNames[i],
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          if (model.collected < prizeUnlockCoins[i]) ...[
-                            const Icon(
-                              Icons.lock_outline,
-                              size: 16,
-                              color: teal,
-                            ),
-                            Text(
-                              '${prizeUnlockCoins[i]} coins',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ] else
-                            Text(
-                              '×${model.collection[prizeIds[i]] ?? 0}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Unlock a new friend every 250 lifetime coins, up to 2,000. Unlocked toys can appear in the machine; push them into the front tray to keep them.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12),
-        ),
-      ],
-    ),
-  );
-
   @override
   void dispose() {
     _audio.dispose();
@@ -393,13 +289,52 @@ class _PusherScreenState extends State<PusherScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFFFFF6DF),
         appBar: AppBar(
-          title: const Text('Pocket Pusher'),
-          actions: [
-            IconButton(
-              tooltip: 'Reset board',
-              icon: const Icon(Icons.restart_alt),
-              onPressed: game == null ? null : _resetBoard,
+          toolbarHeight: 72,
+          backgroundColor: const Color(0xFFFFF6DF),
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleSpacing: 0,
+          leading: IconButton(
+            tooltip: 'Back',
+            onPressed: _exit,
+            icon: const Icon(Icons.arrow_back_rounded, color: teal),
+          ),
+          title: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3B8B0),
+              borderRadius: BorderRadius.circular(20),
             ),
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/pusher/bear.webp',
+                  width: 30,
+                  height: 38,
+                  excludeFromSemantics: true,
+                ),
+                const Expanded(
+                  child: Text(
+                    'Pocket Pusher',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF754F53),
+                    ),
+                  ),
+                ),
+                Image.asset(
+                  'assets/pusher/bunny.webp',
+                  width: 30,
+                  height: 38,
+                  excludeFromSemantics: true,
+                ),
+              ],
+            ),
+          ),
+          actions: [
             IconButton(
               tooltip: 'Settings',
               icon: const Icon(Icons.settings),
@@ -438,9 +373,9 @@ class _PusherScreenState extends State<PusherScreen>
                   builder: (context, constraints) => SingleChildScrollView(
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 440),
+                        constraints: const BoxConstraints(maxWidth: 720),
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(4),
                           child: Column(
                             children: [
                               Row(
@@ -451,11 +386,16 @@ class _PusherScreenState extends State<PusherScreen>
                                     child: Text(
                                       '${game.model.balance} coins',
                                       style: const TextStyle(
-                                        fontSize: 23,
+                                        fontSize: 17,
                                         fontWeight: FontWeight.w800,
                                         color: teal,
                                       ),
                                     ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Reset board',
+                                    icon: const Icon(Icons.restart_alt),
+                                    onPressed: _resetBoard,
                                   ),
                                   IconButton(
                                     tooltip: _paused ? 'Resume' : 'Pause',
@@ -486,9 +426,9 @@ class _PusherScreenState extends State<PusherScreen>
                               ),
                               const SizedBox(height: 12),
                               SizedBox(
-                                height: (constraints.maxHeight * .57).clamp(
+                                height: (constraints.maxHeight - 190).clamp(
                                   310.0,
-                                  510.0,
+                                  1000.0,
                                 ),
                                 child: AspectRatio(
                                   aspectRatio: .8,
@@ -552,19 +492,24 @@ class _PusherScreenState extends State<PusherScreen>
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text(
-                                'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.',
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  key: const Key('pusherCollection'),
-                                  onPressed: _openCollection,
-                                  icon: const Icon(Icons.toys_outlined),
-                                  label: const Text('Cuddly collection'),
-                                ),
+                              ExpansionTile(
+                                title: const Text('Guide & collection'),
+                                children: [
+                                  const Text(
+                                    'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      key: const Key('pusherCollection'),
+                                      onPressed: _openCollection,
+                                      icon: const Icon(Icons.toys_outlined),
+                                      label: const Text('Cuddly collection'),
+                                    ),
+                                  ),
+                                ],
                               ),
                               if (_error != null) ...[
                                 Text(
@@ -587,4 +532,201 @@ class _PusherScreenState extends State<PusherScreen>
       ),
     );
   }
+}
+
+Widget _collectionShelf(PusherModel model) => Container(
+  margin: const EdgeInsets.symmetric(vertical: 10),
+  padding: const EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    color: const Color(0xFFFFECD5),
+    borderRadius: BorderRadius.circular(18),
+    border: Border.all(color: const Color(0xFFE8C5A1)),
+  ),
+  child: Column(
+    children: [
+      const Text(
+        'Your cuddly collection',
+        style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF684A38)),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        model.nextPrizeIndex == null
+            ? 'All 8 milestones reached · All 11 toys unlocked!'
+            : '${model.collected} / ${prizeUnlockCoins[model.nextPrizeIndex!]} coins'
+                  ' · Next: ${prizeNames[model.nextPrizeIndex!]}',
+        key: const Key('pusherUnlockProgress'),
+        textAlign: TextAlign.center,
+      ),
+      const SizedBox(height: 8),
+      LinearProgressIndicator(
+        value: model.nextPrizeIndex == null ? 1 : (model.collected % 250) / 250,
+        color: teal,
+        backgroundColor: const Color(0xFFE6D8B4),
+        semanticsLabel: 'Progress to the next toy unlock',
+      ),
+      const SizedBox(height: 12),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth < 330 ? 2 : 3;
+          final width = (constraints.maxWidth - (columns - 1) * 8) / columns;
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < prizeIds.length; i++)
+                SizedBox(
+                  width: width,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7E9),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        Opacity(
+                          opacity: model.collected >= prizeUnlockCoins[i]
+                              ? 1
+                              : .4,
+                          child: Image.asset(
+                            'assets/pusher/${prizeIds[i]}.webp',
+                            height: 64,
+                            semanticLabel: prizeNames[i],
+                          ),
+                        ),
+                        Text(
+                          prizeNames[i],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        if (model.collected < prizeUnlockCoins[i]) ...[
+                          const Icon(Icons.lock_outline, size: 16, color: teal),
+                          Text(
+                            '${prizeUnlockCoins[i]} coins',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ] else
+                          Text(
+                            '×${model.collection[prizeIds[i]] ?? 0}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Unlock a new friend every 250 lifetime coins, up to 2,000. Unlocked toys can appear in the machine; push them into the front tray to keep them.',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 12),
+      ),
+    ],
+  ),
+);
+
+class _PusherHome extends StatefulWidget {
+  final AppSettings settings;
+  const _PusherHome({required this.settings});
+  @override
+  State<_PusherHome> createState() => _PusherHomeState();
+}
+
+class _PusherHomeState extends State<_PusherHome> {
+  late Future<PusherModel> _future = _load();
+  Future<PusherModel> _load() async {
+    final raw = await SharedPreferencesAsync().getString(
+      'coin_pusher.session.v1',
+    );
+    return PusherModel(
+      saved: raw == null ? null : jsonDecode(raw) as Map<String, dynamic>,
+    );
+  }
+
+  void _reload() {
+    if (mounted) setState(() => _future = _load());
+  }
+
+  Widget _toy(int index) => Image.asset(
+    'assets/pusher/${prizeIds[index]}.webp',
+    fit: BoxFit.contain,
+    semanticLabel: prizeNames[index],
+  );
+  @override
+  Widget build(BuildContext context) => FutureBuilder<PusherModel>(
+    future: _future,
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) {
+        return Scaffold(
+          body: Center(
+            child: snapshot.hasError
+                ? TextButton(
+                    onPressed: _reload,
+                    child: const Text('Retry loading your toys'),
+                  )
+                : const CircularProgressIndicator(),
+          ),
+        );
+      }
+      final model = snapshot.data!;
+      final next = model.nextPrizeIndex;
+      return ArcadeHome(
+        title: 'Pocket Pusher',
+        subtitle:
+            'Little treasures. Cuddly companions.\nA whole shelf of friends to bring together.',
+        action: 'Play the arcade',
+        summary:
+            '${model.collected} coins collected · every push a little closer',
+        accent: teal,
+        background: const Color(0xFFFFF6DF),
+        settings: widget.settings,
+        preview: ArcadeCharacters(
+          shelf: const Color(0xFFC39972),
+          characters: [_toy(0), _toy(1), _toy(2)],
+        ),
+        progressArt: _toy(next ?? 10),
+        progressTitle: next == null
+            ? 'Every friend, together.'
+            : '${prizeNames[next]} is getting closer!',
+        progressDetail: next == null
+            ? 'All 11 toys unlocked'
+            : '${prizeUnlockCoins[next] - model.collected} coins to discover · $next/11 toys',
+        progress: next == null ? 1 : (model.collected % 250) / 250,
+        firstLabel: 'How to play',
+        firstIcon: Icons.explore_outlined,
+        secondLabel: 'My toys',
+        secondIcon: Icons.favorite_border_rounded,
+        footer: 'PUSH • COLLECT • UNWIND',
+        onReturn: _reload,
+        play: (_) => PusherScreen(settings: widget.settings),
+        firstDestination: (_) => Scaffold(
+          appBar: AppBar(title: const Text('How to play')),
+          body: const SingleChildScrollView(
+            padding: EdgeInsets.all(28),
+            child: Text(
+              'Tap the machine to choose where to drop. The drop button repeats your last position.\n\n'
+              'Stack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\n\n'
+              'Collect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.\n\n'
+              'Unlock new toys every 250 lifetime coins. Push them into the front tray to keep them. Refills are always free.',
+              style: TextStyle(fontSize: 16, height: 1.6),
+            ),
+          ),
+        ),
+        secondDestination: (_) => Scaffold(
+          backgroundColor: const Color(0xFFFFF6DF),
+          appBar: AppBar(title: const Text('My toys')),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: _collectionShelf(model),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
