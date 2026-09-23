@@ -111,6 +111,26 @@ void main() {
     expect(find.textContaining('Base overrun'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('compact battle explains attack lanes and active defenses', (
+    tester,
+  ) async {
+    await open(tester, compact: true);
+    await deploy(tester);
+    final r = battlefield(tester)
+      ..squad.last.armored = true
+      ..shield = 24;
+    r.warnings.add(Warning(r.x, 1.5));
+    r.squad.last.hp = 10;
+    await tester.pump(const Duration(milliseconds: 32));
+    expect(
+      find.text('Incoming strike! Steer out of the red lanes.'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('mergefrontDefenses')), findsOneWidget);
+    expect(find.textContaining('Armor 1/3'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('library registration opens dedicated landing screen', (
     tester,
   ) async {
@@ -124,6 +144,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.byKey(const ValueKey('game-card-mergefront')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('All games'), findsOneWidget);
+    expect(settings.lastPlayed, isEmpty);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('My squad'), 150);
+    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.tap(find.text('My squad'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(
@@ -244,6 +273,7 @@ void main() {
     expect(store.value.runs, 1);
     expect(store.value.coins, greaterThan(0));
     await tester.ensureVisible(find.byKey(const Key('mergefrontLoadout')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('mergefrontLoadout')));
     await tester.pump();
     await deploy(tester);

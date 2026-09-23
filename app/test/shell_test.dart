@@ -175,6 +175,50 @@ void main() {
     },
   );
 
+  testWidgets('library restores most recently played order', (tester) async {
+    final original = AppSettings();
+    await original.recordPlay('test_puzzle');
+    final settings = AppSettings();
+    final store = SharedPrefsProgressStore();
+    await tester.pumpWidget(
+      BakaGamesApp(
+        registry: GameRegistry([
+          birdSortEntry(store: store, settings: settings),
+          GameEntry(
+            definition: _TestGame(),
+            buildPlayScreen: (_, _) => const SizedBox(),
+            buildLevelSelect: (_) =>
+                Scaffold(appBar: AppBar(title: const Text('Picker'))),
+          ),
+        ]),
+        store: store,
+        settings: settings,
+      ),
+    );
+    await tester.pumpAndSettle();
+    final recent = find.byKey(const ValueKey('game-card-test_puzzle'));
+    final aviary = find.byKey(const ValueKey('game-card-bird_sort'));
+    expect(
+      tester.getTopLeft(recent).dx,
+      lessThan(tester.getTopLeft(aviary).dx),
+    );
+    await tester.tap(recent);
+    await tester.pumpAndSettle();
+    await settings.recordPlay('bird_sort');
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(aviary).dx,
+      lessThan(tester.getTopLeft(recent).dx),
+    );
+    final restored = AppSettings();
+    await restored.loadRecency(['bird_sort', 'test_puzzle']);
+    expect(
+      restored.lastPlayed['bird_sort'],
+      greaterThan(restored.lastPlayed['test_puzzle']!),
+    );
+  });
+
   testWidgets('settings screen toggles persist', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();

@@ -443,7 +443,84 @@ class BattlefieldPainter extends CustomPainter {
         );
       }
       canvas.restore();
-      _text(canvas, '!', Offset(warning.x * w, h * .70), 30, ink);
+      final inLane = (r.x - warning.x).abs() < warning.width;
+      final labelX = (warning.x * w).clamp(48.0, w - 48);
+      rect(
+        Rect.fromCenter(center: Offset(labelX, h * .64), width: 94, height: 48),
+        ink,
+        8,
+      );
+      _text(
+        canvas,
+        inLane ? 'DODGE!' : 'DANGER',
+        Offset(labelX, h * .64 - 11),
+        14,
+        cream,
+      );
+      _text(
+        canvas,
+        '${warning.remaining.toStringAsFixed(1)}s',
+        Offset(labelX, h * .64 + 10),
+        16,
+        gold,
+      );
+      // Solid lane edges and crosshairs remain readable without animation.
+      for (final edge in [area.left, area.right]) {
+        canvas.drawLine(
+          Offset(edge, 0),
+          Offset(edge, h),
+          Paint()
+            ..color = coral
+            ..strokeWidth = 2,
+        );
+      }
+      canvas.drawCircle(
+        Offset(warning.x * w, h * .80),
+        20,
+        Paint()
+          ..color = coral
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
+    }
+    for (final strike in r.laneStrikes) {
+      final area = Rect.fromLTWH(
+        (strike.x - strike.width) * w,
+        0,
+        strike.width * 2 * w,
+        h,
+      );
+      rect(area, (strike.hit ? coral : gold).withValues(alpha: .38));
+      final center = Offset((strike.x * w).clamp(48.0, w - 48), h * .64);
+      rect(
+        Rect.fromCenter(
+          center: center,
+          width: 112,
+          height: strike.hit ? 52 : 32,
+        ),
+        ink,
+        8,
+      );
+      if (strike.hit) {
+        _text(
+          canvas,
+          strike.hpLost > 0 ? '−${strike.hpLost.ceil()} HP' : 'BLOCKED',
+          center - const Offset(0, 11),
+          16,
+          strike.hpLost > 0 ? coral : cyan,
+        );
+        _text(
+          canvas,
+          strike.shieldLost > 0
+              ? 'Shield −${strike.shieldLost.ceil()}'
+              : 'LANE STRIKE',
+          center + const Offset(0, 11),
+          12,
+          cream,
+        );
+      } else {
+        _text(canvas, 'DODGED', center, 14, cream);
+      }
     }
     final g = r.approaching;
     if (g != null) {
@@ -530,6 +607,53 @@ class BattlefieldPainter extends CustomPainter {
           );
         }
       }
+      if (e.kind == EnemyKind.ranged && r.level.index >= 5) {
+        const fireColor = Color(0xFFFFA34E);
+        rect(
+          Rect.fromCenter(
+            center: c + const Offset(0, 18),
+            width: 12,
+            height: 16,
+          ),
+          ink,
+          3,
+        );
+        rect(
+          Rect.fromCenter(center: c + const Offset(0, 23), width: 7, height: 8),
+          fireColor,
+          2,
+        );
+        if (e.aiming) {
+          final target = Offset(e.aimX * w, h * .80);
+          for (var i = 0; i < 20; i += 2) {
+            canvas.drawLine(
+              Offset.lerp(c, target, i / 20)!,
+              Offset.lerp(c, target, (i + 1) / 20)!,
+              Paint()
+                ..color = fireColor
+                ..strokeWidth = 2,
+            );
+          }
+          canvas.drawCircle(
+            target,
+            12,
+            Paint()
+              ..color = fireColor
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2,
+          );
+          rect(
+            Rect.fromCenter(
+              center: c - const Offset(0, 35),
+              width: 62,
+              height: 22,
+            ),
+            ink,
+            5,
+          );
+          _text(canvas, 'AIMING', c - const Offset(0, 35), 11, fireColor);
+        }
+      }
       if (e.hp < e.maxHp) {
         rect(
           Rect.fromLTWH(
@@ -553,6 +677,31 @@ class BattlefieldPainter extends CustomPainter {
         );
       }
     }
+    for (final bullet in r.enemyBullets) {
+      if (!bullet.active) continue;
+      final tip = Offset(bullet.x * w, bullet.y * h);
+      final tail = Offset(
+        (bullet.x - bullet.vx * .09) * w,
+        (bullet.y - bullet.vy * .09) * h,
+      );
+      canvas.drawLine(
+        tail,
+        tip,
+        Paint()
+          ..color = ink
+          ..strokeWidth = 10
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.drawLine(
+        tail,
+        tip,
+        Paint()
+          ..color = const Color(0xFFFFA34E)
+          ..strokeWidth = 6
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.drawCircle(tip, 3, Paint()..color = cream);
+    }
     for (final shot in r.shots) {
       if (!shot.active) continue;
       final a = Offset(shot.x * w, shot.y * h),
@@ -570,6 +719,7 @@ class BattlefieldPainter extends CustomPainter {
     final count = r.squad.length;
     final columns = min(5, max(1, count));
     const unitSize = 40.0;
+    final healthBars = <({double x, double y, double fraction})>[];
     for (var i = 0; i < count; i++) {
       final s = r.squad[i];
       final dx =
@@ -578,7 +728,7 @@ class BattlefieldPainter extends CustomPainter {
               : s.formationX) *
           w;
       final dy = (reduced ? .80 + (i ~/ columns) * .035 : s.formationY) * h;
-      if (r.shield > 0 || r.armor) {
+      if (r.shield > 0) {
         canvas.drawOval(
           Rect.fromCenter(center: Offset(dx, dy), width: 39, height: 43),
           p..color = cyan.withValues(alpha: .20),
@@ -592,10 +742,34 @@ class BattlefieldPainter extends CustomPainter {
         s.tier,
         bounce: reduced ? 0 : sin(t * 9 + i) * 1.6 + s.recoil * 2,
       );
-      if (s.hp < s.maxHp) {
-        rect(Rect.fromLTWH(dx - 13, dy + 18, 26, 4), ink, 2);
-        rect(Rect.fromLTWH(dx - 13, dy + 18, 26 * s.hp / s.maxHp, 4), gold, 2);
+      if (s.armored) {
+        final plate = Path()
+          ..moveTo(dx - 19, dy - 16)
+          ..lineTo(dx + 19, dy - 16)
+          ..lineTo(dx + 19, dy + 7)
+          ..lineTo(dx, dy + 19)
+          ..lineTo(dx - 19, dy + 7)
+          ..close();
+        canvas.drawPath(
+          plate,
+          Paint()
+            ..color = ink
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 5,
+        );
+        canvas.drawPath(
+          plate,
+          Paint()
+            ..color = gold
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3,
+        );
       }
+      healthBars.add((
+        x: dx,
+        y: dy + 19,
+        fraction: (s.hp / s.maxHp).clamp(0.0, 1.0),
+      ));
       if (s.recoil > .65 && !reduced) {
         canvas.drawCircle(
           Offset(dx + 13, dy - 12),
@@ -603,6 +777,19 @@ class BattlefieldPainter extends CustomPainter {
           p..color = gold,
         );
       }
+    }
+    // Paint above all soldiers so another row cannot obscure health.
+    for (final bar in healthBars) {
+      rect(Rect.fromLTWH(bar.x - 11, bar.y, 22, 6), ink, 3);
+      rect(
+        Rect.fromLTWH(bar.x - 10, bar.y + 1, 20 * bar.fraction, 4),
+        bar.fraction > .5
+            ? const Color(0xFF78D89A)
+            : bar.fraction > .25
+            ? gold
+            : coral,
+        2,
+      );
     }
     if (!reduced) {
       for (final spark in r.sparks) {

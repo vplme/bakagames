@@ -32,7 +32,9 @@ void paintCabinet(
   void Function(Canvas canvas)? paintFalling,
 }) {
   canvas.save();
-  canvas.scale(size.width / 12, size.height / 15);
+  // The title lives in the screen header; use its former space for play.
+  canvas.scale(size.width / 12, size.height / 12.6);
+  canvas.translate(0, -2.4);
   final paint = Paint();
   void face(List<Offset> points, List<Color> colors) {
     final path = Path()..addPolygon(points, true);
@@ -112,62 +114,6 @@ void paintCabinet(
     );
   }
 
-  // A little enamel toy-shop sign, with a bear mascot and piped cream trim.
-  rounded(
-    const Rect.fromLTWH(1.1, .38, 9.8, 1.95),
-    .65,
-    const Color(0xFFC28C80),
-  );
-  rounded(
-    const Rect.fromLTWH(1.1, .25, 9.8, 1.95),
-    .65,
-    const Color(0xFFFFF3DA),
-  );
-  rounded(
-    const Rect.fromLTWH(1.22, .37, 9.56, 1.7),
-    .55,
-    const Color(0xFFF3B8B0),
-  );
-  label('Pocket Pusher', .61, .65, const Color(0xFF754F53));
-  label('tiny treasures, happy hearts', 1.42, .26, const Color(0xFF754F53));
-  for (final x in [1.95, 10.05]) {
-    for (final dx in [-.24, .24]) {
-      canvas.drawCircle(
-        Offset(x + dx, .92),
-        .19,
-        paint..color = const Color(0xFFD39D70),
-      );
-      canvas.drawCircle(
-        Offset(x + dx, .92),
-        .10,
-        paint..color = const Color(0xFFF3B8B0),
-      );
-    }
-    rounded(
-      Rect.fromCenter(center: Offset(x, 1.23), width: .76, height: .67),
-      .28,
-      const Color(0xFFF5D5A0),
-    );
-    for (final dx in [-.15, .15]) {
-      canvas.drawCircle(
-        Offset(x + dx, 1.19),
-        .035,
-        paint..color = const Color(0xFF754F53),
-      );
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(x + dx * 1.5, 1.31),
-          width: .13,
-          height: .075,
-        ),
-        paint..color = const Color(0xFFEDA6A0),
-      );
-    }
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(x, 1.32), width: .09, height: .065),
-      paint..color = const Color(0xFF754F53),
-    );
-  }
   // A dark well surrounds the supported playfield. Its floor is lower
   // than the tabletop, with exposed vertical walls at the loss edges.
   plane(-1, 0, 11, 12, -1.15, [

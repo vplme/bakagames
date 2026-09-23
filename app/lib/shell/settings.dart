@@ -11,6 +11,26 @@ class AppSettings {
   final ValueNotifier<bool> hapticsOn = ValueNotifier(true);
   final ValueNotifier<bool> reducedMotion = ValueNotifier(false);
   AudioPlayer? _player;
+  final Map<String, int> lastPlayed = {};
+
+  Future<void> loadRecency(Iterable<String> ids) async {
+    for (final id in ids) {
+      final saved = await _prefs.getInt('lastPlayed.$id');
+      if (saved != null && saved > (lastPlayed[id] ?? 0)) {
+        lastPlayed[id] = saved;
+      }
+    }
+  }
+
+  Future<void> recordPlay(String id) async {
+    final time = DateTime.now().microsecondsSinceEpoch;
+    lastPlayed[id] = time;
+    try {
+      await _prefs.setInt('lastPlayed.$id', time);
+    } catch (_) {
+      // Keep the current session ordered if preferences are unavailable.
+    }
+  }
 
   AppSettings([SharedPreferencesAsync? prefs])
     : _prefs = prefs ?? SharedPreferencesAsync();
