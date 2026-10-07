@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -16,15 +21,16 @@ jobs:
           # yields pointer files instead of real images.
           lfs: true
 
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
+      - uses: ./.github/actions/setup-flutter
+
+      - name: Check release automation
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
 
       # The Flutter app: static analysis plus widget and integration tests.
       - name: Flutter app
         working-directory: app
         run: |
-          flutter pub get
+          flutter pub get --enforce-lockfile
           flutter analyze
           flutter test
 
@@ -37,3 +43,28 @@ jobs:
             (cd "packages/$pkg" && dart pub get && dart test)
             echo "::endgroup::"
           done
+
+  build-android:
+    name: Build Android APK
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: ./.github/actions/setup-flutter
+      - name: Build debug APK
+        working-directory: app
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-${{ github.sha }}-${{ github.run_attempt }}
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

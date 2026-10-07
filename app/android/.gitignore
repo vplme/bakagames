@@ -12,3 +12,9 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Release tooling and local credentials.
+play-service-account*.json
+fastlane/report.xml
+.bundle/
+vendor/bundle/

@@ -20,3 +20,4 @@ pubspec.lock
 # Agent scratch space and local worktrees. Contains nested checkouts and
 # machine-local SDK paths; never part of the published tree.
 .claude/
+__pycache__/
