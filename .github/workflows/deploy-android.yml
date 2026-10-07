@@ -1,0 +1,148 @@
+name: Deploy Android (Play internal)
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version name (MAJOR.MINOR.PATCH)'
+        required: true
+        default: '1.0.0'
+        type: string
+      mode:
+        description: 'bootstrap: first manual upload; build-only: AAB; upload: Play internal'
+        required: true
+        default: build-only
+        type: choice
+        options: [build-only, bootstrap, upload]
+
+permissions:
+  contents: read
+
+# One release at a time, across every branch/tag. Never interrupt a Play upload.
+concurrency:
+  group: bakagames-play-internal
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: play-internal
+    timeout-minutes: 45
+    env:
+      ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/bakagames-upload.jks
+      SUPPLY_JSON_KEY: ${{ runner.temp }}/bakagames-play.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Resolve version
+        id: version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+          MODE_INPUT: ${{ inputs.mode }}
+        run: python3 .github/scripts/android_release.py
+
+      - name: Prepare credentials
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+          UPLOAD: ${{ steps.version.outputs.upload }}
+        shell: python
+        run: |
+          import base64, json, os
+          from pathlib import Path
+          required = ['ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD',
+                      'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD']
+          if os.environ['UPLOAD'] == 'true':
+              required.append('PLAY_SERVICE_ACCOUNT_JSON_BASE64')
+          for name in required:
+              if not os.environ.get(name):
+                  raise SystemExit(f'::error::Missing play-internal secret: {name}')
+          os.umask(0o077)
+          try:
+              Path(os.environ['ANDROID_KEYSTORE_PATH']).write_bytes(
+                  base64.b64decode(os.environ['ANDROID_KEYSTORE_BASE64'], validate=True))
+              if os.environ['UPLOAD'] == 'true':
+                  data = base64.b64decode(os.environ['PLAY_SERVICE_ACCOUNT_JSON_BASE64'], validate=True)
+                  account = json.loads(data)
+                  if not isinstance(account, dict) or account.get('type') != 'service_account':
+                      raise ValueError('Invalid account type')
+                  Path(os.environ['SUPPLY_JSON_KEY']).write_bytes(data)
+          except (ValueError, TypeError):
+              raise SystemExit('::error::Invalid base64 keystore or service-account JSON secret')
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: ./.github/actions/setup-flutter
+      - name: Build signed App Bundle
+        working-directory: app
+        env:
+          REQUIRE_ANDROID_RELEASE_SIGNING: 'true'
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build appbundle --release --build-name="$RELEASE_VERSION" --build-number="$RELEASE_CODE"
+          jarsigner -J-Duser.language=en -J-Duser.country=US -verify build/app/outputs/bundle/release/app-release.aab | tee "$RUNNER_TEMP/bakagames-signature.txt"
+          grep -Fq 'jar verified.' "$RUNNER_TEMP/bakagames-signature.txt"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          bundle = Path('build/app/outputs/bundle/release')
+          (bundle / 'release.json').write_text(json.dumps({
+              'package': 'dev.lauver.bakagames', 'commit': os.environ['GITHUB_SHA'],
+              'version': os.environ['RELEASE_VERSION'], 'versionCode': os.environ['RELEASE_CODE'],
+              'run': os.environ['GITHUB_RUN_ID'], 'attempt': os.environ['GITHUB_RUN_ATTEMPT']
+          }, indent=2) + '\n')
+          PY
+          (cd build/app/outputs/bundle/release && sha256sum app-release.aab > SHA256SUMS)
+
+      - name: Save signed bundle before uploading
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-${{ steps.version.outputs.version }}-${{ steps.version.outputs.code }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            app/build/app/outputs/bundle/release/app-release.aab
+            app/build/app/outputs/bundle/release/release.json
+            app/build/app/outputs/bundle/release/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+
+      - uses: ruby/setup-ruby@v1
+        if: steps.version.outputs.upload == 'true'
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: app/android
+      - name: Upload existing bundle to internal testing
+        if: steps.version.outputs.upload == 'true'
+        working-directory: app/android
+        env:
+          FASTLANE_SKIP_UPDATE_CHECK: 'true'
+          FASTLANE_OPT_OUT_USAGE: 'true'
+        run: bundle exec fastlane android internal
+      - name: Release summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CODE: ${{ steps.version.outputs.code }}
+          UPLOAD: ${{ steps.version.outputs.upload }}
+        run: |
+          echo "Android $VERSION ($CODE), commit $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Play internal upload: $UPLOAD. Signed AAB is in this run's artifacts." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -f "$ANDROID_KEYSTORE_PATH" "$SUPPLY_JSON_KEY"

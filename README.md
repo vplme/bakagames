@@ -106,6 +106,14 @@ Run each from the repository root:
 (cd packages/game_core && dart test)         # shared contracts
 ```
 
+## Android releases
+
+CI checks the app and engines and produces a downloadable Android debug APK.
+The Android deployment workflow builds signed App Bundles and uploads to Google
+Play internal testing through a version tag or manual run. For signing-key setup,
+GitHub secrets, the first manual Play upload, and subsequent releases, follow
+[the Android release guide](docs/android-releases.md).
+
 ## Artwork
 
 Bird sprites and habitat backgrounds are AI-generated and bundled locally — the

@@ -1,0 +1,21 @@
+default_platform(:android)
+
+platform :android do
+  desc "Upload the already-built signed bundle to Google Play internal testing"
+  lane :internal do
+    bundle = File.expand_path("../../build/app/outputs/bundle/release/app-release.aab", __dir__)
+    UI.user_error!("Build the signed AAB first") unless File.file?(bundle)
+    upload_to_play_store(
+      package_name: "dev.lauver.bakagames",
+      json_key: ENV.fetch("SUPPLY_JSON_KEY"),
+      track: "internal",
+      aab: bundle,
+      release_status: "completed",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true
+    )
+  end
+end
