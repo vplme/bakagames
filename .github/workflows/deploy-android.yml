@@ -34,13 +34,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: play-internal
     timeout-minutes: 45
-    env:
-      ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/bakagames-upload.jks
-      SUPPLY_JSON_KEY: ${{ runner.temp }}/bakagames-play.json
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
+      - name: Set credential paths
+        run: |
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/bakagames-upload.jks" >> "$GITHUB_ENV"
+          echo "SUPPLY_JSON_KEY=$RUNNER_TEMP/bakagames-play.json" >> "$GITHUB_ENV"
       - name: Resolve version
         id: version
         env:
