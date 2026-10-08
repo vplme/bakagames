@@ -62,8 +62,10 @@ Open the repository's **Settings → Environments → New environment** and crea
 | --- | --- |
 | `ANDROID_KEYSTORE_BASE64` | Base64-encoded contents of the upload keystore |
 | `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
-| `ANDROID_KEY_ALIAS` | `upload` |
 | `ANDROID_KEY_PASSWORD` | Key password, possibly the same as the keystore password |
+
+Add `ANDROID_KEY_ALIAS` as an **Environment variable** (not a secret) under the
+same `play-internal` environment, with value `upload`.
 
 If you have GitHub CLI installed and authenticated, send the keystore directly
 to the secret without printing it:
