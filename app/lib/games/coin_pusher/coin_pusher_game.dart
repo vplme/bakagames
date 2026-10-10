@@ -353,6 +353,9 @@ class _PusherScreenState extends State<PusherScreen>
                     setState(() => _paused = true);
                     _save();
                   },
+                  overlay: Text(
+                    '${game.model.bonusRemaining} to +10 bonus${_paused ? ' · Paused' : ''}',
+                  ),
                   menu: Column(
                     children: [
                       Align(

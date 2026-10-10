@@ -189,6 +189,21 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                         'Level ${widget.levelIndex + 1} · Moves: ${c.moveCount}',
                     color: aviaryCream,
                     foregroundColor: aviaryInk,
+                    overlay: Text(
+                      '${c.departed.length ~/ c.level.capacity}/${c.level.colourCount} flocks home',
+                    ),
+                    actions: [
+                      IconButton(
+                        tooltip: 'Undo',
+                        onPressed: c.canUndo ? c.undoMove : null,
+                        icon: const Icon(Icons.undo),
+                      ),
+                      IconButton(
+                        tooltip: 'Hint',
+                        onPressed: _hintRunning ? null : () => _hint(c),
+                        icon: const Icon(Icons.lightbulb_outline),
+                      ),
+                    ],
                     menu: Column(
                       children: [
                         Align(

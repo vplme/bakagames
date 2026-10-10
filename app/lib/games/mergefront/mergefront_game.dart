@@ -619,6 +619,13 @@ class _MergefrontScreenState extends State<MergefrontScreen>
       color: cream,
       foregroundColor: ink,
       onMenuOpened: () => _pause(true),
+      overlay: Text(
+        '${r.strength.ceil()} squad HP'
+        '${r.armor ? ' · Armor ${r.armoredCount}/${r.squad.length}' : ''}'
+        '${r.shield > 0 ? ' · Shield ${r.shield.ceil()}' : ''}'
+        '${r.boss != null ? ' · Boss ${r.boss!.hp.ceil()}/${r.boss!.maxHp.ceil()}' : ' · ${((r.time / r.level.bossAt).clamp(0, 1) * 100).floor()}% to boss'}'
+        '${paused ? ' · Paused' : ''}',
+      ),
       menu: Column(
         children: [
           TextButton.icon(

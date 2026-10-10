@@ -399,6 +399,40 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                             color: const Color(0xFFFCE4F1),
                             foregroundColor: sweetsInk,
 
+                            overlay: Wrap(
+                              alignment: WrapAlignment.center,
+                              runSpacing: 4,
+                              children: [
+                                for (var t = 0; t < game.typeCount; t++)
+                                  if (game.targets[t] > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 10),
+                                      child: Semantics(
+                                        label:
+                                            '${_names[t]}: ${shown.collected[t]} of ${game.targets[t]} collected',
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            SweetPiece(
+                                              piece: Sweet(t, t),
+                                              size: 24,
+                                            ),
+                                            Text(
+                                              '${shown.collected[t].clamp(0, game.targets[t])}/${game.targets[t]}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                              ],
+                            ),
+                            actions: [
+                              IconButton(
+                                tooltip: 'Hint',
+                                onPressed: _busy || _saving ? null : _hintMove,
+                                icon: const Icon(Icons.lightbulb_outline),
+                              ),
+                            ],
                             menu: Column(
                               children: [
                                 Align(
