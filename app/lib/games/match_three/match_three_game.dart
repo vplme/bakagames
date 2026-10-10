@@ -1,3 +1,4 @@
+import '../../shell/game_play_layout.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -389,61 +390,34 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                           )
                         : shown == null || game == null
                         ? const Center(child: CircularProgressIndicator())
-                        : SingleChildScrollView(
-                            padding: const EdgeInsets.all(4),
-                            child: Column(
+                        : GamePlayLayout(
+                            completed: showCompletion,
+                            title: 'Pocket Sweets',
+                            status: _busy
+                                ? 'Collecting…'
+                                : 'Level ${widget.levelIndex + 1} · Moves: ${shown.moves}',
+                            color: const Color(0xFFFCE4F1),
+                            foregroundColor: sweetsInk,
+
+                            menu: Column(
                               children: [
-                                Row(
-                                  children: [
-                                    IconButton.filledTonal(
-                                      tooltip: 'Back',
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFFF1CEE3,
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: IconButton.filledTonal(
+                                    tooltip: 'Settings',
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: const Color(0xFFF1CEE3),
+                                      foregroundColor: sweetsInk,
+                                    ),
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => SettingsScreen(
+                                          settings: widget.settings,
                                         ),
-                                        foregroundColor: sweetsInk,
-                                      ),
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
-                                      icon: const Icon(
-                                        Icons.arrow_back_rounded,
                                       ),
                                     ),
-                                    const Expanded(
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            'POCKET SWEETS',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              color: sweetsInk,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w900,
-                                              letterSpacing: 2.6,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton.filledTonal(
-                                      tooltip: 'Settings',
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFFF1CEE3,
-                                        ),
-                                        foregroundColor: sweetsInk,
-                                      ),
-                                      onPressed: () =>
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute<void>(
-                                              builder: (_) => SettingsScreen(
-                                                settings: widget.settings,
-                                              ),
-                                            ),
-                                          ),
-                                      icon: const Icon(Icons.tune_rounded),
-                                    ),
-                                  ],
+                                    icon: const Icon(Icons.tune_rounded),
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
@@ -532,14 +506,117 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 6),
-                                LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final width = constraints.maxWidth.clamp(
-                                      336.0,
-                                      620.0,
-                                    );
-                                    final cell = width / 7;
-                                    return Column(
+                                const SizedBox(height: 12),
+                                Semantics(
+                                  liveRegion: true,
+                                  child: Text(
+                                    _busy ? 'Collecting…' : _message,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    0,
+                                    4,
+                                    0,
+                                    8,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: PlayControlButton(
+                                          icon: Icons.undo,
+                                          label: 'Undo',
+                                          backgroundColor: const Color(
+                                            0xFFF1CEE3,
+                                          ),
+                                          foregroundColor: sweetsInk,
+                                          onPressed:
+                                              _busy || _saving || !game.canUndo
+                                              ? null
+                                              : () {
+                                                  setState(() {
+                                                    game.undo();
+                                                    _shown = game.state;
+                                                    _selected = null;
+                                                    _hint = {};
+                                                    _saved = false;
+                                                    _saveError = null;
+                                                    _message =
+                                                        'Last move undone.';
+                                                  });
+                                                },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: PlayControlButton(
+                                          icon: Icons.refresh,
+                                          label: 'Restart',
+                                          backgroundColor: const Color(
+                                            0xFFF1CEE3,
+                                          ),
+                                          foregroundColor: sweetsInk,
+                                          onPressed: _busy || _saving
+                                              ? null
+                                              : () {
+                                                  _message = 'A fresh start!';
+                                                  _load();
+                                                },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: PlayControlButton(
+                                          icon: Icons.lightbulb_outline,
+                                          label: 'Hint',
+                                          backgroundColor: const Color(
+                                            0xFFF1CEE3,
+                                          ),
+                                          foregroundColor: sweetsInk,
+                                          onPressed: _busy || game.won
+                                              ? null
+                                              : _hintMove,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: ExpansionTile(
+                                    title: const Text('Level guide'),
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Text(
+                                          sweetLevels[widget.levelIndex].tip,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (game.won && !_busy && _completionDismissed)
+                                  TextButton(
+                                    onPressed: () => setState(
+                                      () => _completionDismissed = false,
+                                    ),
+                                    child: const Text('Show completion'),
+                                  ),
+                              ],
+                            ),
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final width = constraints.biggest.shortestSide
+                                    .clamp(336.0, double.infinity);
+                                final cell = width / 7;
+                                return SingleChildScrollView(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: constraints.maxHeight,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Scrollbar(
                                           controller: _boardScroll,
@@ -801,106 +878,10 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                             ],
                                           ),
                                       ],
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                                Semantics(
-                                  liveRegion: true,
-                                  child: Text(
-                                    _busy ? 'Collecting…' : _message,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    0,
-                                    4,
-                                    0,
-                                    8,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: PlayControlButton(
-                                          icon: Icons.undo,
-                                          label: 'Undo',
-                                          backgroundColor: const Color(
-                                            0xFFF1CEE3,
-                                          ),
-                                          foregroundColor: sweetsInk,
-                                          onPressed:
-                                              _busy || _saving || !game.canUndo
-                                              ? null
-                                              : () {
-                                                  setState(() {
-                                                    game.undo();
-                                                    _shown = game.state;
-                                                    _selected = null;
-                                                    _hint = {};
-                                                    _saved = false;
-                                                    _saveError = null;
-                                                    _message =
-                                                        'Last move undone.';
-                                                  });
-                                                },
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: PlayControlButton(
-                                          icon: Icons.refresh,
-                                          label: 'Restart',
-                                          backgroundColor: const Color(
-                                            0xFFF1CEE3,
-                                          ),
-                                          foregroundColor: sweetsInk,
-                                          onPressed: _busy || _saving
-                                              ? null
-                                              : () {
-                                                  _message = 'A fresh start!';
-                                                  _load();
-                                                },
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: PlayControlButton(
-                                          icon: Icons.lightbulb_outline,
-                                          label: 'Hint',
-                                          backgroundColor: const Color(
-                                            0xFFF1CEE3,
-                                          ),
-                                          foregroundColor: sweetsInk,
-                                          onPressed: _busy || game.won
-                                              ? null
-                                              : _hintMove,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Material(
-                                  color: Colors.transparent,
-                                  child: ExpansionTile(
-                                    title: const Text('Level guide'),
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(12),
-                                        child: Text(
-                                          sweetLevels[widget.levelIndex].tip,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (game.won && !_busy && _completionDismissed)
-                                  TextButton(
-                                    onPressed: () => setState(
-                                      () => _completionDismissed = false,
                                     ),
-                                    child: const Text('Show completion'),
                                   ),
-                              ],
+                                );
+                              },
                             ),
                           ),
                   ),

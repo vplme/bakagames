@@ -1,3 +1,4 @@
+import 'game_menu_helpers.dart';
 import 'package:baka_games/games/mergefront/art.dart';
 import 'package:baka_games/games/mergefront/audio.dart';
 import 'package:baka_games/games/mergefront/mergefront_game.dart';
@@ -79,11 +80,13 @@ void main() {
     await open(tester, compact: true);
     await deploy(tester);
     final r = battlefield(tester);
-    expect(find.text('BASE 100/100'), findsOneWidget);
+    expect(find.textContaining('Base 100/100'), findsOneWidget);
     r.spawn(EnemyKind.rusher, .88);
     r.enemies.first.y = .80;
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('BASE 95/100'), findsOneWidget);
+    expect(find.textContaining('Base 95/100'), findsOneWidget);
+    expect(find.textContaining('BASE HIT −5'), findsOneWidget);
+    await openGameMenu(tester);
     expect(
       tester
           .widget<LinearProgressIndicator>(
@@ -92,7 +95,8 @@ void main() {
           .value,
       .95,
     );
-    expect(find.textContaining('BASE HIT −5'), findsOneWidget);
+    await tester.tap(find.byTooltip('Resume'));
+    await tester.pump();
     r.hurt(10);
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.textContaining('SQUAD −10 HP'), findsOneWidget);
@@ -101,7 +105,7 @@ void main() {
     r.spawn(EnemyKind.boss, .5);
     r.bossSpawned = true;
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('BASE 25/100 • CRITICAL'), findsOneWidget);
+    expect(find.textContaining('Base 25/100'), findsOneWidget);
     expect(tester.takeException(), isNull);
     r.baseHealth = 5;
     r.spawn(EnemyKind.rusher, .88);
@@ -126,8 +130,9 @@ void main() {
       find.text('Incoming strike! Steer out of the red lanes.'),
       findsOneWidget,
     );
+    await openGameMenu(tester);
     expect(find.byKey(const Key('mergefrontDefenses')), findsOneWidget);
-    expect(find.textContaining('Armor 1/3'), findsOneWidget);
+    expect(find.textContaining('Armor 1/3').last, findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

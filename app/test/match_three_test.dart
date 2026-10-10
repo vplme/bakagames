@@ -1,3 +1,4 @@
+import 'game_menu_helpers.dart';
 import 'package:baka_games/games/match_three/match_three_game.dart';
 import 'package:baka_games/shell/settings.dart';
 import 'package:baka_games/games/match_three/sweets_style.dart';
@@ -74,10 +75,18 @@ void main() {
   testWidgets('late campaign displays all unlocked collection goals', (
     tester,
   ) async {
-    await open(tester, MemoryStore(), levelIndex: 75, compact: true);
+    await open(tester, MemoryStore(), levelIndex: 134, compact: true);
+    await openGameMenu(tester);
     expect(find.bySemanticsLabel(RegExp('Caramel diamond:.*')), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('Raspberry ring:.*')), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('Peach twist:.*')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Lemon rocket:.*')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Cocoa bonbon:.*')), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('Coconut snowflake:.*')),
+      findsOneWidget,
+    );
+    await openGameMenu(tester);
     await tester.ensureVisible(find.text('Restart'));
     await tester.tap(find.text('Restart'));
     await settleWorker(tester);
@@ -87,19 +96,22 @@ void main() {
   testWidgets('tap swap, hint, undo and restart', (tester) async {
     await open(tester, MemoryStore());
     final move = MatchThree().hint()!;
+    await openGameMenu(tester);
     await tester.ensureVisible(find.text('Hint'));
     await tester.tap(find.text('Hint'));
     await settleWorker(tester);
     expect(find.text('Swap the two highlighted sweets.'), findsOneWidget);
+    await closeGameMenu(tester);
     await tester.ensureVisible(find.byKey(ValueKey('sweet-cell-${move.$1}')));
     await tester.tap(find.byKey(ValueKey('sweet-cell-${move.$1}')));
     await tester.tap(find.byKey(ValueKey('sweet-cell-${move.$2}')));
     await settleWorker(tester);
-    expect(find.text('Moves: 1'), findsOneWidget);
+    expect(find.textContaining('Moves: 1').last, findsOneWidget);
+    await openGameMenu(tester);
     await tester.ensureVisible(find.text('Undo'));
     await tester.tap(find.text('Undo'));
     await tester.pump();
-    expect(find.text('Moves: 0'), findsOneWidget);
+    expect(find.textContaining('Moves: 0').last, findsOneWidget);
     await tester.tap(find.text('Restart'));
     await settleWorker(tester);
     expect(find.text('A fresh start!'), findsOneWidget);
@@ -110,7 +122,8 @@ void main() {
     'gameplay header opens settings and uses ordered circular controls',
     (tester) async {
       await open(tester, MemoryStore());
-      expect(find.text('POCKET SWEETS'), findsOneWidget);
+      await openGameMenu(tester);
+      expect(find.text('Pocket Sweets'), findsOneWidget);
       expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
       expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
       await tester.tap(find.byTooltip('Settings'));
@@ -118,7 +131,8 @@ void main() {
       expect(find.text('Sound'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
-      expect(find.text('Moves: 0'), findsOneWidget);
+      expect(find.textContaining('Moves: 0').last, findsOneWidget);
+      await openGameMenu(tester);
       await tester.ensureVisible(find.text('Hint'));
       await tester.pumpAndSettle();
       expect(
@@ -142,7 +156,7 @@ void main() {
       move.$2 - move.$1 == 1 ? const Offset(55, 0) : const Offset(0, 55),
     );
     await settleWorker(tester);
-    expect(find.text('Moves: 1'), findsOneWidget);
+    expect(find.textContaining('Moves: 1').last, findsOneWidget);
   });
 
   testWidgets('compact enlarged text remains usable', (tester) async {
@@ -151,10 +165,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await open(tester, MemoryStore(), compact: true);
+    await openGameMenu(tester);
     await tester.ensureVisible(find.text('Restart'));
     await tester.tap(find.text('Restart'));
     await settleWorker(tester);
     expect(tester.takeException(), isNull);
+    await closeGameMenu(tester);
     final slide = find.byTooltip('Show right side of board');
     await tester.ensureVisible(slide);
     await tester.tap(slide);
@@ -180,12 +196,14 @@ void main() {
       expect(find.text('Collecting…'), findsOneWidget);
       await tester.tap(a);
       await tester.tap(b);
+      await openGameMenu(tester);
       final undo = tester.widget<IconButton>(
         find.byWidgetPredicate(
           (widget) => widget is IconButton && widget.tooltip == 'Undo',
         ),
       );
       expect(undo.onPressed, isNull);
+      await closeGameMenu(tester);
       var sawBurst = false;
       for (var i = 0; i < 20; i++) {
         await tester.runAsync(
@@ -206,7 +224,7 @@ void main() {
       ]);
       expect(sawBurst, isTrue);
       expect(find.byType(SugarBurst), findsNothing);
-      expect(find.text('Moves: 1'), findsOneWidget);
+      expect(find.textContaining('Moves: 1').last, findsOneWidget);
       expect(find.text('Collecting…'), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -217,11 +235,12 @@ void main() {
     (tester) async {
       await open(tester, MemoryStore(), reduced: false, systemReduced: true);
       final move = MatchThree().hint()!;
+      await closeGameMenu(tester);
       await tester.ensureVisible(find.byKey(ValueKey('sweet-cell-${move.$1}')));
       await tester.tap(find.byKey(ValueKey('sweet-cell-${move.$1}')));
       await tester.tap(find.byKey(ValueKey('sweet-cell-${move.$2}')));
       await settleWorker(tester);
-      expect(find.text('Moves: 1'), findsOneWidget);
+      expect(find.textContaining('Moves: 1').last, findsOneWidget);
       expect(find.text('Collecting…'), findsNothing);
       expect(find.byType(SugarBurst), findsNothing);
     },
@@ -268,15 +287,17 @@ void main() {
         await tester.tap(find.byTooltip('Back to board'));
         await tester.pumpAndSettle();
         expect(find.byType(Dialog), findsNothing);
+        await openGameMenu(tester);
         await tester.ensureVisible(find.text('Show completion'));
         await tester.tap(find.text('Show completion'));
         await tester.pumpAndSettle();
         expect(find.text('Next level').hitTestable(), findsOneWidget);
         await tester.tap(find.text('Next level'));
         await settleWorker(tester);
+        await openGameMenu(tester);
         expect(find.text('Level 2'), findsOneWidget);
         expect(find.text('MINT MEADOW'), findsOneWidget);
-        expect(find.text('Moves: 0'), findsOneWidget);
+        expect(find.textContaining('Moves: 0').last, findsOneWidget);
       },
     );
   }

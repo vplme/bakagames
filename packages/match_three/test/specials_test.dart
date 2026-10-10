@@ -20,9 +20,12 @@ void main() {
     expect(MatchThree.varietyEffect(5, 0), {1, 7});
     expect(MatchThree.varietyEffect(6, 0), {8});
     expect(MatchThree.varietyEffect(7, 6), {4, 5});
+    expect(MatchThree.varietyEffect(8, 0), {7, 14, 21, 28, 35, 42});
+    expect(MatchThree.varietyEffect(9, 0), {1, 7, 8});
+    expect(MatchThree.varietyEffect(10, 0), {8, 16, 24, 32, 40, 48});
     expect(MatchThree.varietyEffect(4, 24), isEmpty);
   });
-  for (final type in [5, 6, 7]) {
+  for (final type in [5, 6, 7, 8, 9, 10]) {
     test('variety $type clears its footprint once and restores on undo', () {
       final g = MatchThree(
         opening: fixture({
@@ -30,7 +33,7 @@ void main() {
           24: Sweet(24, type),
           16: Sweet(16, type),
         }),
-        targets: List.filled(8, 999),
+        targets: List.filled(11, 999),
         specials: SpecialRules.all,
       );
       final before = signature(g);
@@ -39,7 +42,10 @@ void main() {
       final expected = switch (type) {
         5 => {16, 22, 23, 24, 30},
         6 => {15, 17, 22, 23, 24, 29, 31},
-        _ => {21, 22, 23, 24, 25},
+        7 => {21, 22, 23, 24, 25},
+        8 => {2, 9, 16, 22, 23, 24, 30, 37, 44},
+        9 => {15, 16, 17, 22, 23, 24, 29, 30, 31},
+        _ => {5, 7, 11, 15, 17, 22, 23, 24, 29, 31, 35, 39, 47},
       };
       expect({
         for (var i = 0; i < 49; i++)
@@ -57,7 +63,25 @@ void main() {
   }
 
   test('unlock boundaries restrict spawning and preserve undo and restart', () {
-    for (final number in [15, 16, 30, 31, 45, 46, 60, 61, 75, 76, 90]) {
+    for (final number in [
+      15,
+      16,
+      30,
+      31,
+      45,
+      46,
+      60,
+      61,
+      75,
+      76,
+      90,
+      91,
+      105,
+      106,
+      120,
+      121,
+      135,
+    ]) {
       final game = sweetLevels[number - 1].create();
       final expected = number < 46
           ? 5
@@ -65,7 +89,13 @@ void main() {
           ? 6
           : number < 76
           ? 7
-          : 8;
+          : number < 91
+          ? 8
+          : number < 106
+          ? 9
+          : number < 121
+          ? 10
+          : 11;
       expect(game.typeCount, expected);
       expect(
         game.specials,
@@ -180,9 +210,9 @@ void main() {
     },
   );
   test(
-    'all 90 levels are deterministic, playable and finish under legal hint play',
+    'all 135 levels are deterministic, playable and finish under legal hint play',
     () {
-      expect(sweetLevels.length, 90);
+      expect(sweetLevels.length, 135);
       final turns = <int>[];
       for (final level in sweetLevels) {
         final g = level.create();

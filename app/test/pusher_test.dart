@@ -1,3 +1,4 @@
+import 'game_menu_helpers.dart';
 import 'dart:convert';
 import 'package:baka_games/games/coin_pusher/pusher_game.dart';
 import 'package:baka_games/shell/home_screen.dart';
@@ -261,11 +262,18 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Petal Axolotl'), findsNothing);
+    await openGameMenu(tester);
     await tester.ensureVisible(find.text('Guide & collection'));
     await tester.pump();
     await tester.tap(find.text('Guide & collection'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
+    await openGameMenu(tester);
+    if (find.byKey(const Key('pusherCollection')).evaluate().isEmpty) {
+      await tester.ensureVisible(find.text('Guide & collection'));
+      await tester.tap(find.text('Guide & collection'));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
     await tester.ensureVisible(find.byKey(const Key('pusherCollection')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('pusherCollection')));
@@ -280,10 +288,18 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Petal Axolotl'), findsNothing);
-    expect(find.byTooltip('Pause'), findsOneWidget);
+    expect(find.byTooltip('Resume'), findsOneWidget);
+    await tester.tap(find.byTooltip('Resume'));
+    await tester.pump();
     await tester.ensureVisible(find.byTooltip('Pause'));
     await tester.tap(find.byTooltip('Pause'));
     await tester.pump();
+    await openGameMenu(tester);
+    if (find.byKey(const Key('pusherCollection')).evaluate().isEmpty) {
+      await tester.ensureVisible(find.text('Guide & collection'));
+      await tester.tap(find.text('Guide & collection'));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
     await tester.ensureVisible(find.byKey(const Key('pusherCollection')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('pusherCollection')));
@@ -464,11 +480,18 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Your cuddly collection'), findsNothing);
+    await openGameMenu(tester);
     await tester.ensureVisible(find.text('Guide & collection'));
     await tester.pump();
     await tester.tap(find.text('Guide & collection'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
+    await openGameMenu(tester);
+    if (find.byKey(const Key('pusherCollection')).evaluate().isEmpty) {
+      await tester.ensureVisible(find.text('Guide & collection'));
+      await tester.tap(find.text('Guide & collection'));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
     await tester.ensureVisible(find.byKey(const Key('pusherCollection')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('pusherCollection')));
@@ -614,11 +637,12 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('40 coins'), findsOneWidget);
+    expect(find.textContaining('40 coins').last, findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('pusherDrop')));
     await tester.tap(find.byKey(const Key('pusherDrop')));
     await tester.pump();
-    expect(find.text('39 coins'), findsOneWidget);
+    expect(find.textContaining('39 coins').last, findsOneWidget);
+    await openGameMenu(tester);
     await tester.ensureVisible(find.byTooltip('Reset board'));
     await tester.pump();
     await tester.tap(find.byTooltip('Reset board'));
@@ -626,7 +650,8 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('39 coins'), findsOneWidget);
+    expect(find.textContaining('39 coins').last, findsOneWidget);
+    await openGameMenu(tester);
     await tester.ensureVisible(find.byTooltip('Reset board'));
     await tester.pump();
     await tester.tap(find.byTooltip('Reset board'));
@@ -634,11 +659,14 @@ void main() {
     await tester.tap(find.byKey(const Key('confirmPusherReset')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('40 coins'), findsOneWidget);
+    expect(find.textContaining('40 coins').last, findsOneWidget);
+    await tester.tap(find.byTooltip('Resume'));
+    await tester.pump();
     await tester.ensureVisible(find.byTooltip('Pause'));
     await tester.tap(find.byTooltip('Pause'));
     await tester.pump();
     expect(find.byTooltip('Resume'), findsOneWidget);
+    await openGameMenu(tester);
     expect(find.text('Machine paused'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
     final raw = await SharedPreferencesAsync().getString(

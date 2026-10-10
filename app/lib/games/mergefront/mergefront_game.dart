@@ -1,3 +1,4 @@
+import '../../shell/game_play_layout.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -89,6 +90,8 @@ class _MergefrontScreenState extends State<MergefrontScreen>
       widget.settings.reducedMotion.value ||
       MediaQuery.disableAnimationsOf(context);
   bool get locked => saving || error != null;
+  final _playLayoutKey = GlobalKey<GamePlayLayoutState>();
+
   @override
   void initState() {
     super.initState();
@@ -270,7 +273,9 @@ class _MergefrontScreenState extends State<MergefrontScreen>
   Widget build(BuildContext context) => PopScope(
     canPop: leave,
     onPopInvokedWithResult: (didPop, _) {
-      if (!didPop) _exit();
+      if (!didPop && !(_playLayoutKey.currentState?.closeMenu() ?? false)) {
+        _exit();
+      }
     },
     child: Theme(
       data: Theme.of(context).copyWith(
@@ -283,28 +288,30 @@ class _MergefrontScreenState extends State<MergefrontScreen>
       ),
       child: Scaffold(
         backgroundColor: cream,
-        appBar: AppBar(
-          toolbarHeight: 48,
-          backgroundColor: cream,
-          title: const Text(
-            'Squad Rusher',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1,
-              fontSize: 19,
-            ),
-          ),
-          actions: [
-            IconButton(
-              tooltip: 'Options',
-              onPressed: () {
-                _pause(true);
-                setState(() => options = !options);
-              },
-              icon: const Icon(Icons.tune),
-            ),
-          ],
-        ),
+        appBar: run != null && !run!.finished && !options
+            ? null
+            : AppBar(
+                toolbarHeight: 48,
+                backgroundColor: cream,
+                title: const Text(
+                  'Squad Rusher',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                    fontSize: 19,
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    tooltip: 'Options',
+                    onPressed: () {
+                      _pause(true);
+                      setState(() => options = !options);
+                    },
+                    icon: const Icon(Icons.tune),
+                  ),
+                ],
+              ),
         body: SafeArea(
           child: profile == null
               ? Center(
@@ -600,250 +607,256 @@ class _MergefrontScreenState extends State<MergefrontScreen>
 
   Widget _battle() {
     final r = run!;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${r.squad.length} SQUAD • ${r.strength.ceil()}/${r.squad.fold<double>(0, (sum, s) => sum + s.maxHp).ceil()} HP',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                    if (r.armor || r.shield > 0)
+    return GamePlayLayout(
+      key: _playLayoutKey,
+      paused: paused,
+      pauseKey: const Key('mergefrontPause'),
+      onTogglePause: () => _pause(!paused),
+      onBack: _exit,
+      title: 'Squad Rusher',
+      status:
+          '${r.squad.length} squad · Base ${r.baseHealth}/${Run.maxBaseHealth}',
+      color: cream,
+      foregroundColor: ink,
+      onMenuOpened: () => _pause(true),
+      menu: Column(
+        children: [
+          TextButton.icon(
+            onPressed: () {
+              _pause(true);
+              setState(() => options = true);
+            },
+            icon: const Icon(Icons.tune),
+            label: const Text('Options'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        [
-                          if (r.armor)
-                            'Armor ${r.armoredCount}/${r.squad.length} • −35% per troop',
-                          if (r.shield > 0) 'Shield ${r.shield.ceil()}',
-                        ].join(' • '),
-                        key: const Key('mergefrontDefenses'),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                        '${r.squad.length} SQUAD • ${r.strength.ceil()}/${r.squad.fold<double>(0, (sum, s) => sum + s.maxHp).ceil()} HP',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      if (r.armor || r.shield > 0)
+                        Text(
+                          [
+                            if (r.armor)
+                              'Armor ${r.armoredCount}/${r.squad.length} • −35% per troop',
+                            if (r.shield > 0) 'Shield ${r.shield.ceil()}',
+                          ].join(' • '),
+                          key: const Key('mergefrontDefenses'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Semantics(
+              label: 'Base health',
+              value: '${r.baseHealth} of ${Run.maxBaseHealth}',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'BASE ${r.baseHealth}/${Run.maxBaseHealth}${r.baseHealth <= 25 ? ' • CRITICAL' : ''}',
+                    key: const Key('mergefrontBaseHealth'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: r.baseHealth <= 25 ? const Color(0xFFAB3045) : ink,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  LinearProgressIndicator(
+                    key: const Key('mergefrontBaseBar'),
+                    value: r.baseHealth / Run.maxBaseHealth,
+                    minHeight: 5,
+                    color: r.baseHealth <= 25 ? coral : cyan,
+                    backgroundColor: const Color(0xFFE2D5B4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: LinearProgressIndicator(
+              value: (r.time / r.level.bossAt).clamp(0, 1),
+              color: cyan,
+              backgroundColor: const Color(0xFFE2D5B4),
+            ),
+          ),
+          if (r.boss != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+              child: Column(
+                children: [
+                  Text(
+                    r.level.index.isEven ? 'BELLCRAB' : 'KITE ENGINE',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  LinearProgressIndicator(
+                    value: r.boss!.hp / r.boss!.maxHp,
+                    color: coral,
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      child: Center(
+        child: SizedBox(
+          width: double.infinity,
+          child: LayoutBuilder(
+            builder: (context, constraints) => Listener(
+              key: const Key('mergefrontBattlefield'),
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (event) {
+                if (pointer != null ||
+                    paused ||
+                    event.localPosition.dy < constraints.maxHeight * .45) {
+                  return;
+                }
+                pointer = event.pointer;
+                pointerX = event.localPosition.dx;
+              },
+              onPointerMove: (event) {
+                if (pointer != event.pointer || paused) return;
+                r.steer(
+                  r.targetX +
+                      (event.localPosition.dx - pointerX) /
+                          constraints.maxWidth *
+                          profile!.sensitivity,
+                );
+                pointerX = event.localPosition.dx;
+              },
+              onPointerUp: (event) {
+                if (pointer == event.pointer) pointer = null;
+              },
+              onPointerCancel: (event) {
+                if (pointer == event.pointer) pointer = null;
+              },
+              child: Semantics(
+                label:
+                    'Battlefield. Drag left or right in the lower half to steer. ${r.squad.length} units. ${r.approaching == null ? '' : 'Left: ${r.approaching!.left.label}. Right: ${r.approaching!.right.label}.'}',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CustomPaint(
+                        painter: BattlefieldPainter(r, reduced: reduced),
+                      ),
+                      Positioned(
+                        left: 4,
+                        right: 4,
+                        bottom: 4,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: cream.withValues(alpha: .9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  r.warnings.isNotEmpty
+                                      ? 'Incoming strike! Steer out of the red lanes.'
+                                      : r.enemies.any(
+                                          (e) => e.active && e.aiming,
+                                        )
+                                      ? 'Shooter aiming! Move away from the orange target.'
+                                      : r.damageNoticeRemaining > 0
+                                      ? r.damageNotice
+                                      : r.laneStrikes.isNotEmpty &&
+                                            r.laneStrikes.every((s) => !s.hit)
+                                      ? 'Dodged! Your squad is safe.'
+                                      : r.approaching == null
+                                      ? (r.time < 6
+                                            ? 'Stop enemies in every lane. Escapes damage your base.'
+                                            : r.event)
+                                      : r.x > .48 && r.x < .52
+                                      ? '← CHOOSE A GATE →'
+                                      : '${r.x < .5 ? '←' : '→'} ${(r.x < .5 ? r.approaching!.left : r.approaching!.right).preview(r)}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: ink,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                  ],
-                ),
-              ),
-              IconButton(
-                key: const Key('mergefrontPause'),
-                tooltip: paused ? 'Resume' : 'Pause',
-                onPressed: () => _pause(!paused),
-                icon: Icon(paused ? Icons.play_arrow : Icons.pause),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Semantics(
-            label: 'Base health',
-            value: '${r.baseHealth} of ${Run.maxBaseHealth}',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'BASE ${r.baseHealth}/${Run.maxBaseHealth}${r.baseHealth <= 25 ? ' • CRITICAL' : ''}',
-                  key: const Key('mergefrontBaseHealth'),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: r.baseHealth <= 25 ? const Color(0xFFAB3045) : ink,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                LinearProgressIndicator(
-                  key: const Key('mergefrontBaseBar'),
-                  value: r.baseHealth / Run.maxBaseHealth,
-                  minHeight: 5,
-                  color: r.baseHealth <= 25 ? coral : cyan,
-                  backgroundColor: const Color(0xFFE2D5B4),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: LinearProgressIndicator(
-            value: (r.time / r.level.bossAt).clamp(0, 1),
-            color: cyan,
-            backgroundColor: const Color(0xFFE2D5B4),
-          ),
-        ),
-        if (r.boss != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-            child: Column(
-              children: [
-                Text(
-                  r.level.index.isEven ? 'BELLCRAB' : 'KITE ENGINE',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                LinearProgressIndicator(
-                  value: r.boss!.hp / r.boss!.maxHp,
-                  color: coral,
-                ),
-              ],
-            ),
-          ),
-        Expanded(
-          child: Center(
-            child: SizedBox(
-              width: double.infinity,
-              child: LayoutBuilder(
-                builder: (context, constraints) => Listener(
-                  key: const Key('mergefrontBattlefield'),
-                  behavior: HitTestBehavior.opaque,
-                  onPointerDown: (event) {
-                    if (pointer != null ||
-                        paused ||
-                        event.localPosition.dy < constraints.maxHeight * .45) {
-                      return;
-                    }
-                    pointer = event.pointer;
-                    pointerX = event.localPosition.dx;
-                  },
-                  onPointerMove: (event) {
-                    if (pointer != event.pointer || paused) return;
-                    r.steer(
-                      r.targetX +
-                          (event.localPosition.dx - pointerX) /
-                              constraints.maxWidth *
-                              profile!.sensitivity,
-                    );
-                    pointerX = event.localPosition.dx;
-                  },
-                  onPointerUp: (event) {
-                    if (pointer == event.pointer) pointer = null;
-                  },
-                  onPointerCancel: (event) {
-                    if (pointer == event.pointer) pointer = null;
-                  },
-                  child: Semantics(
-                    label:
-                        'Battlefield. Drag left or right in the lower half to steer. ${r.squad.length} units. ${r.approaching == null ? '' : 'Left: ${r.approaching!.left.label}. Right: ${r.approaching!.right.label}.'}',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          CustomPaint(
-                            painter: BattlefieldPainter(r, reduced: reduced),
-                          ),
-                          if (r.time < 6)
-                            const Positioned(
-                              left: 8,
-                              right: 8,
-                              bottom: 8,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: cream,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(12),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: Text(
-                                    '←  DRAG HERE TO STEER  →',
-                                    textAlign: TextAlign.center,
+                      if (paused)
+                        ColoredBox(
+                          color: ink.withValues(alpha: .78),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'TAKE A BREATHER',
                                     style: TextStyle(
-                                      color: ink,
-                                      fontWeight: FontWeight.w800,
+                                      color: cream,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
                                     ),
                                   ),
-                                ),
-                              ),
-                            ),
-                          if (paused)
-                            ColoredBox(
-                              color: ink.withValues(alpha: .78),
-                              child: Center(
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        'TAKE A BREATHER',
-                                        style: TextStyle(
-                                          color: cream,
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${r.damage.toStringAsFixed(1)}× power • ${r.rate.toStringAsFixed(1)}× rate${r.spread ? ' • Spread' : ''}${r.pierce ? ' • Pierce' : ''}${r.armor ? ' • Armor ${r.armoredCount}/${r.squad.length}' : ''}${r.shield > 0 ? ' • Shield ${r.shield.round()}' : ''}',
-                                        style: const TextStyle(color: cream),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      FilledButton(
-                                        onPressed: () => _pause(false),
-                                        child: const Text('Resume'),
-                                      ),
-                                      TextButton(
-                                        key: const Key('mergefrontRestart'),
-                                        onPressed: locked ? null : _start,
-                                        child: const Text(
-                                          'Restart this seed',
-                                          style: TextStyle(color: cream),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          setState(() => run = null);
-                                        },
-                                        child: const Text(
-                                          'Return to loadout',
-                                          style: TextStyle(color: cream),
-                                        ),
-                                      ),
-                                    ],
+                                  Text(
+                                    '${r.damage.toStringAsFixed(1)}× power • ${r.rate.toStringAsFixed(1)}× rate${r.spread ? ' • Spread' : ''}${r.pierce ? ' • Pierce' : ''}${r.armor ? ' • Armor ${r.armoredCount}/${r.squad.length}' : ''}${r.shield > 0 ? ' • Shield ${r.shield.round()}' : ''}',
+                                    style: const TextStyle(color: cream),
                                   ),
-                                ),
+                                  const SizedBox(height: 12),
+                                  FilledButton(
+                                    onPressed: () => _pause(false),
+                                    child: const Text('Resume'),
+                                  ),
+                                  TextButton(
+                                    key: const Key('mergefrontRestart'),
+                                    onPressed: locked ? null : _start,
+                                    child: const Text(
+                                      'Restart this seed',
+                                      style: TextStyle(color: cream),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      setState(() => run = null);
+                                    },
+                                    child: const Text(
+                                      'Return to loadout',
+                                      style: TextStyle(color: cream),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                        ],
-                      ),
-                    ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-          child: Semantics(
-            liveRegion: true,
-            child: Text(
-              r.warnings.isNotEmpty
-                  ? 'Incoming strike! Steer out of the red lanes.'
-                  : r.enemies.any((e) => e.active && e.aiming)
-                  ? 'Shooter aiming! Move away from the orange target.'
-                  : r.damageNoticeRemaining > 0
-                  ? r.damageNotice
-                  : r.laneStrikes.isNotEmpty &&
-                        r.laneStrikes.every((s) => !s.hit)
-                  ? 'Dodged! Your squad is safe.'
-                  : r.approaching == null
-                  ? (r.time < 6
-                        ? 'Stop enemies in every lane. Escapes damage your base.'
-                        : r.event)
-                  : r.x > .48 && r.x < .52
-                  ? '← CHOOSE A GATE →'
-                  : '${r.x < .5 ? '←' : '→'} ${(r.x < .5 ? r.approaching!.left : r.approaching!.right).preview(r)}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w700, color: ink),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 

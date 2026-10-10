@@ -10,6 +10,9 @@ const sweetColors = [
   Color(0xFFCB692B),
   Color(0xFFE64797),
   Color(0xFFF08051),
+  Color(0xFFE5BB17),
+  Color(0xFF85503D),
+  Color(0xFF59BDB8),
 ];
 const sweetNames = [
   'Berry heart',
@@ -20,6 +23,9 @@ const sweetNames = [
   'Caramel diamond',
   'Raspberry ring',
   'Peach twist',
+  'Lemon rocket',
+  'Cocoa bonbon',
+  'Coconut snowflake',
 ];
 String sweetLabel(Sweet piece) =>
     '${sweetNames[piece.type]}${switch (piece.special) {
@@ -177,6 +183,46 @@ class _CandyPainter extends CustomPainter {
       path.fillType = PathFillType.evenOdd;
       path.addOval(const Rect.fromLTWH(10, 10, 80, 80));
       path.addOval(const Rect.fromLTWH(36, 36, 28, 28));
+    } else if (type == 8) {
+      path.moveTo(50, 5);
+      path.quadraticBezierTo(77, 27, 68, 65);
+      path.lineTo(85, 84);
+      path.lineTo(59, 77);
+      path.lineTo(50, 96);
+      path.lineTo(41, 77);
+      path.lineTo(15, 84);
+      path.lineTo(32, 65);
+      path.quadraticBezierTo(23, 27, 50, 5);
+      path.close();
+    } else if (type == 9) {
+      path.addRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(13, 17, 74, 66),
+          const Radius.circular(22),
+        ),
+      );
+    } else if (type == 10) {
+      path.moveTo(50, 4);
+      for (final point in const [
+        Offset(61, 30),
+        Offset(83, 17),
+        Offset(70, 39),
+        Offset(96, 50),
+        Offset(70, 61),
+        Offset(83, 83),
+        Offset(61, 70),
+        Offset(50, 96),
+        Offset(39, 70),
+        Offset(17, 83),
+        Offset(30, 61),
+        Offset(4, 50),
+        Offset(30, 39),
+        Offset(17, 17),
+        Offset(39, 30),
+      ]) {
+        path.lineTo(point.dx, point.dy);
+      }
+      path.close();
     } else {
       path.moveTo(9, 29);
       path.lineTo(30, 37);
@@ -211,6 +257,19 @@ class _CandyPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
+    if (type == 9) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(25, 58)
+          ..quadraticBezierTo(40, 30, 50, 50)
+          ..quadraticBezierTo(60, 70, 75, 42),
+        Paint()
+          ..color = const Color(0xFFFFE4B9)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5
+          ..strokeCap = StrokeCap.round,
+      );
+    }
     canvas.drawOval(
       const Rect.fromLTWH(28, 23, 18, 7),
       Paint()..color = const Color(0xCCFFFFFF),

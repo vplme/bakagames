@@ -32,7 +32,7 @@ raster generation was needed. These are visual QA renders, not device captures.
 
 ## Campaign progression
 
-The campaign now has 90 stable level indices. Caramel diamond unlocks at level
+The campaign now has 135 stable level indices. Caramel diamond unlocks at level
 46, raspberry ring at 61, and peach twist at 76. Striped sweets unlock at
 level 16 and rainbow sweets at level 31: one unlock after every 15 levels. These original vector sweets
 are painted locally by Flutter with distinct silhouettes. The engine uses each
@@ -48,3 +48,11 @@ Caught striped and rainbow sweets still activate, and newly created specials sur
 the centers of their visible alpha bounds, correcting the heart's offset without
 changing the source artwork. Undo and restart are tested at each unlock boundary;
 the full campaign is checked for deterministic, legal completion by hint play.
+
+Levels 91–135 add lemon launchpads, cocoa courtyards, and coconut constellations.
+Lemon rockets unlock at 91 and clear the middle rocket’s column; cocoa bonbons
+unlock at 106 and clear a 3×3 area; coconut snowflakes unlock at 121 and clear
+both diagonals. Each activates once per matched run, clips at board edges, and
+uses the existing special-chain and collection rules. Original vector silhouettes
+and Sweet Guide entries accompany all three. Levels 1–90 retain their seeds,
+targets, and unlock rules. The campaign now supports eleven varieties.

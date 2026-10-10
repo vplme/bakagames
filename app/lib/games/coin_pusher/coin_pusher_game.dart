@@ -1,3 +1,4 @@
+import '../../shell/game_play_layout.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flame/game.dart';
@@ -66,6 +67,8 @@ class _PusherScreenState extends State<PusherScreen>
   double _aim = 5;
   String _message = 'Choose a spot, then drop a coin.';
   static const _key = 'coin_pusher.session.v1';
+
+  final _playLayoutKey = GlobalKey<GamePlayLayoutState>();
 
   @override
   void initState() {
@@ -284,75 +287,12 @@ class _PusherScreenState extends State<PusherScreen>
     return PopScope(
       canPop: _leaving,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _exit();
+        if (!didPop && !(_playLayoutKey.currentState?.closeMenu() ?? false)) {
+          _exit();
+        }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFFFF6DF),
-        appBar: AppBar(
-          toolbarHeight: 72,
-          backgroundColor: const Color(0xFFFFF6DF),
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          titleSpacing: 0,
-          leading: IconButton(
-            tooltip: 'Back',
-            onPressed: _exit,
-            icon: const Icon(Icons.arrow_back_rounded, color: teal),
-          ),
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3B8B0),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/pusher/bear.webp',
-                  width: 30,
-                  height: 38,
-                  excludeFromSemantics: true,
-                ),
-                const Expanded(
-                  child: Text(
-                    'Pocket Pusher',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF754F53),
-                    ),
-                  ),
-                ),
-                Image.asset(
-                  'assets/pusher/bunny.webp',
-                  width: 30,
-                  height: 38,
-                  excludeFromSemantics: true,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            IconButton(
-              tooltip: 'Settings',
-              icon: const Icon(Icons.settings),
-              onPressed: () async {
-                _audio.stop();
-                game?.pauseEngine();
-                setState(() => _paused = true);
-                await _save();
-                if (!context.mounted) return;
-                await Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => SettingsScreen(settings: widget.settings),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
         body: SafeArea(
           child: game == null
               ? Center(
@@ -369,163 +309,183 @@ class _PusherScreenState extends State<PusherScreen>
                           ],
                         ),
                 )
-              : LayoutBuilder(
-                  builder: (context, constraints) => SingleChildScrollView(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 720),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${game.model.balance} coins',
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        color: teal,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: 'Reset board',
-                                    icon: const Icon(Icons.restart_alt),
-                                    onPressed: _resetBoard,
-                                  ),
-                                  IconButton(
-                                    tooltip: _paused ? 'Resume' : 'Pause',
-                                    onPressed: () {
-                                      setState(() => _paused = !_paused);
-                                      if (_paused) {
-                                        _audio.stop();
-                                        game.pauseEngine();
-                                        _save();
-                                      } else {
-                                        game.resumeEngine();
-                                      }
-                                    },
-                                    icon: Icon(
-                                      _paused ? Icons.play_arrow : Icons.pause,
-                                    ),
-                                  ),
-                                ],
+              : GamePlayLayout(
+                  key: _playLayoutKey,
+                  title: 'Pocket Pusher',
+                  status:
+                      '${game.model.balance} coins · ${game.model.collected} collected',
+                  color: const Color(0xFFFFF6DF),
+                  foregroundColor: teal,
+                  actions: [
+                    IconButton(
+                      key: const Key('pusherDrop'),
+                      tooltip: game.model.balance == 0
+                          ? 'Refill 40 coins · Free'
+                          : 'Drop coin · 1',
+                      onPressed: game.model.balance == 0
+                          ? () {
+                              setState(() {
+                                game.model.refill();
+                              });
+                              _save();
+                            }
+                          : _paused
+                          ? null
+                          : _drop,
+                      icon: const Icon(Icons.monetization_on),
+                    ),
+                  ],
+                  paused: _paused,
+                  onTogglePause: () {
+                    setState(() => _paused = !_paused);
+                    if (_paused) {
+                      _audio.stop();
+                      game.pauseEngine();
+                      _save();
+                    } else {
+                      game.resumeEngine();
+                    }
+                  },
+                  onBack: _exit,
+                  onMenuOpened: () {
+                    _audio.stop();
+                    game.pauseEngine();
+                    setState(() => _paused = true);
+                    _save();
+                  },
+                  menu: Column(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          tooltip: 'Settings',
+                          icon: const Icon(Icons.settings),
+                          onPressed: () async {
+                            _audio.stop();
+                            game.pauseEngine();
+                            setState(() => _paused = true);
+                            await _save();
+                            if (!context.mounted) return;
+                            await Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    SettingsScreen(settings: widget.settings),
                               ),
-                              Text(
-                                '${game.model.collected} collected · ${game.model.bonusRemaining} to +10 bonus',
-                              ),
-                              const SizedBox(height: 8),
-                              LinearProgressIndicator(
-                                value: game.model.bonus / 20,
+                            );
+                          },
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${game.model.balance} coins',
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
                                 color: teal,
-                                backgroundColor: const Color(0xFFE6D8B4),
                               ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: (constraints.maxHeight - 190).clamp(
-                                  310.0,
-                                  1000.0,
-                                ),
-                                child: AspectRatio(
-                                  aspectRatio: .8,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(22),
-                                    child: LayoutBuilder(
-                                      builder: (context, boardConstraints) =>
-                                          GestureDetector(
-                                            onTapDown: _paused
-                                                ? null
-                                                : (details) {
-                                                    final width =
-                                                        boardConstraints
-                                                            .maxWidth;
-                                                    _aim = aimFromBoard(
-                                                      details.localPosition.dx,
-                                                      width,
-                                                      game.model.pusherY + 1,
-                                                    );
-                                                    _drop();
-                                                  },
-                                            child: GameWidget(game: game),
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _paused ? 'Machine paused' : _message,
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton.icon(
-                                  key: const Key('pusherDrop'),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: teal,
-                                    padding: const EdgeInsets.all(16),
-                                  ),
-                                  onPressed: _paused
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Reset board',
+                            icon: const Icon(Icons.restart_alt),
+                            onPressed: _resetBoard,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '${game.model.collected} collected · ${game.model.bonusRemaining} to +10 bonus',
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: game.model.bonus / 20,
+                        color: teal,
+                        backgroundColor: const Color(0xFFE6D8B4),
+                      ),
+                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
+                      Text(
+                        _paused ? 'Machine paused' : _message,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+
+                      const SizedBox(height: 8),
+                      ExpansionTile(
+                        title: const Text('Guide & collection'),
+                        children: [
+                          const Text(
+                            'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              key: const Key('pusherCollection'),
+                              onPressed: _openCollection,
+                              icon: const Icon(Icons.toys_outlined),
+                              label: const Text('Cuddly collection'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_error != null) ...[
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        TextButton(
+                          onPressed: _save,
+                          child: const Text('Retry save'),
+                        ),
+                      ],
+                    ],
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Center(
+                        child: AspectRatio(
+                          aspectRatio: 12 / 12.6,
+                          child: LayoutBuilder(
+                            builder: (context, boardConstraints) =>
+                                GestureDetector(
+                                  onTapDown: _paused
                                       ? null
-                                      : game.model.balance == 0
-                                      ? () {
-                                          setState(() {
-                                            game.model.refill();
-                                            _message =
-                                                '40 free coins. Keep pushing!';
-                                          });
-                                          _save();
-                                        }
-                                      : _drop,
-                                  icon: const Icon(Icons.monetization_on),
-                                  label: Text(
-                                    game.model.balance == 0
-                                        ? 'Refill 40 coins · Free'
-                                        : 'Drop coin · 1',
-                                    textAlign: TextAlign.center,
-                                  ),
+                                      : (details) {
+                                          final width =
+                                              boardConstraints.maxWidth;
+                                          _aim = aimFromBoard(
+                                            details.localPosition.dx,
+                                            width,
+                                            game.model.pusherY + 1,
+                                          );
+                                          _drop();
+                                        },
+                                  child: GameWidget(game: game),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              ExpansionTile(
-                                title: const Text('Guide & collection'),
-                                children: [
-                                  const Text(
-                                    'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: OutlinedButton.icon(
-                                      key: const Key('pusherCollection'),
-                                      onPressed: _openCollection,
-                                      icon: const Icon(Icons.toys_outlined),
-                                      label: const Text('Cuddly collection'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (_error != null) ...[
-                                Text(
-                                  _error!,
-                                  style: const TextStyle(color: Colors.red),
-                                ),
-                                TextButton(
-                                  onPressed: _save,
-                                  child: const Text('Retry save'),
-                                ),
-                              ],
-                            ],
                           ),
                         ),
                       ),
-                    ),
+                      if (game.model.balance == 0)
+                        Positioned(
+                          bottom: 16,
+                          left: 24,
+                          right: 24,
+                          child: FilledButton(
+                            onPressed: () {
+                              setState(() {
+                                game.model.refill();
+                              });
+                              _save();
+                            },
+                            child: const Text('Refill 40 coins · Free'),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
         ),

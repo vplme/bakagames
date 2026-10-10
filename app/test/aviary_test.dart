@@ -1,3 +1,4 @@
+import 'game_menu_helpers.dart';
 import 'package:baka_games/games/bird_sort/aviary.dart';
 import 'package:baka_games/games/bird_sort/aviary_levels.dart';
 import 'package:baka_games/games/bird_sort/board.dart';
@@ -258,6 +259,7 @@ void main() {
     expect(tester.getSize(birds.first).height, greaterThanOrEqualTo(48));
     await tester.tap(find.byKey(const ValueKey('branch0')));
     await tester.pumpAndSettle();
+    await openGameMenu(tester);
     expect(find.text('Choose a glowing perch to land.'), findsOneWidget);
     await tester.ensureVisible(find.byIcon(Icons.lightbulb_outline));
     await tester.tap(find.byIcon(Icons.lightbulb_outline));
@@ -266,7 +268,7 @@ void main() {
       () => Future<void>.delayed(const Duration(milliseconds: 400)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Moves: 1'), findsOneWidget);
+    expect(find.textContaining('Moves: 1').last, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

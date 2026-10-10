@@ -1,3 +1,4 @@
+import 'game_menu_helpers.dart';
 import 'package:baka_games/games/bird_sort/play_controller.dart';
 import 'package:baka_games/games/bird_sort/play_screen.dart';
 import 'package:bird_sort/bird_sort.dart';
@@ -88,8 +89,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Level 1'), findsOneWidget);
-      expect(find.text('Moves: 0'), findsOneWidget);
+      expect(find.textContaining('Level 1'), findsOneWidget);
+      expect(find.textContaining('Moves: 0').last, findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('branch1')));
       await tester.pump();
@@ -112,18 +113,22 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await openGameMenu(tester);
       final undo = find.widgetWithIcon(IconButton, Icons.undo);
       expect(tester.widget<IconButton>(undo).onPressed, isNull);
+      await closeGameMenu(tester);
 
       await tester.tap(find.byKey(const ValueKey('branch0')));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('branch2')));
       await tester.pumpAndSettle();
-      expect(find.text('Moves: 1'), findsOneWidget);
+      expect(find.textContaining('Moves: 1').last, findsOneWidget);
 
+      await openGameMenu(tester);
+      await tester.ensureVisible(undo);
       await tester.tap(undo);
       await tester.pumpAndSettle();
-      expect(find.text('Moves: 0'), findsOneWidget);
+      expect(find.textContaining('Moves: 0').last, findsOneWidget);
     });
   });
 
@@ -154,6 +159,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await openGameMenu(tester);
+      await tester.ensureVisible(find.byIcon(Icons.lightbulb_outline));
       await tester.tap(find.byIcon(Icons.lightbulb_outline));
       await tester.pump();
       await tester.runAsync(
@@ -177,7 +184,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await openGameMenu(tester);
       final button = find.widgetWithIcon(IconButton, Icons.park_outlined);
+      await tester.ensureVisible(button);
       await tester.tap(button);
       await tester.pumpAndSettle();
       expect(tester.widget<IconButton>(button).onPressed, isNull);

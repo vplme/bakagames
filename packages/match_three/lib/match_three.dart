@@ -57,9 +57,9 @@ class MatchThree {
   }) : opening = opening == null ? null : List.unmodifiable(opening),
        targets = List.unmodifiable(targets ?? [12, 12, 12, 0, 0]) {
     if (this.targets.length < types ||
-        this.targets.length > 8 ||
+        this.targets.length > 11 ||
         this.targets.any((n) => n < 0)) {
-      throw ArgumentError('Expected five to eight nonnegative targets');
+      throw ArgumentError('Expected five to eleven nonnegative targets');
     }
     if (opening != null &&
         (opening.length != size * size ||
@@ -140,6 +140,19 @@ class MatchThree {
       5 => [(0, -1), (0, 1), (-1, 0), (1, 0)],
       6 => [(-1, -1), (-1, 1), (1, -1), (1, 1)],
       7 => [(0, -2), (0, -1), (0, 1), (0, 2)],
+      8 => [
+        for (var d = -6; d <= 6; d++)
+          if (d != 0) (d, 0),
+      ],
+      9 => [
+        for (var dr = -1; dr <= 1; dr++)
+          for (var dc = -1; dc <= 1; dc++)
+            if (dr != 0 || dc != 0) (dr, dc),
+      ],
+      10 => [
+        for (var d = -6; d <= 6; d++)
+          if (d != 0) ...[(d, d), (d, -d)],
+      ],
       _ => <(int, int)>[],
     };
     return {

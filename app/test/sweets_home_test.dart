@@ -74,14 +74,21 @@ void main() {
       await tester.tap(find.text('Sweet guide'));
       await tester.pumpAndSettle();
       final guide = find.byType(BottomSheet);
-      for (final name in ['Caramel diamond', 'Raspberry ring', 'Peach twist']) {
+      for (final name in [
+        'Caramel diamond',
+        'Raspberry ring',
+        'Peach twist',
+        'Lemon rocket',
+        'Cocoa bonbon',
+        'Coconut snowflake',
+      ]) {
         expect(
           find.descendant(of: guide, matching: find.text(name)),
           findsOneWidget,
         );
       }
       await tester.scrollUntilVisible(
-        find.text('Unlock at level 76'),
+        find.text('Unlock at level 121'),
         180,
         scrollable: find
             .descendant(of: guide, matching: find.byType(Scrollable))

@@ -127,6 +127,27 @@ class _SweetsHomeScreenState extends State<SweetsHomeScreen> {
               'Match three or more to clear two sweets to each side of the middle peach twist.',
               sweetUnlockLevels[7],
             ),
+            const SizedBox(height: 16),
+            _guideRow(
+              const Sweet(0, 8),
+              sweetNames[8],
+              'Match three or more to clear the entire column through the middle rocket.',
+              sweetUnlockLevels[8],
+            ),
+            const SizedBox(height: 16),
+            _guideRow(
+              const Sweet(0, 9),
+              sweetNames[9],
+              'Match three or more to blast a 3×3 area around the middle bonbon.',
+              sweetUnlockLevels[9],
+            ),
+            const SizedBox(height: 16),
+            _guideRow(
+              const Sweet(0, 10),
+              sweetNames[10],
+              'Match three or more to clear both diagonals through the middle snowflake.',
+              sweetUnlockLevels[10],
+            ),
             const SizedBox(height: 20),
             const Text(
               'Each matched line triggers its variety effect once. Sweets caught in these effects count toward your goals and can activate striped or rainbow sweets. New striped and rainbow sweets survive the match that creates them.',
