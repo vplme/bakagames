@@ -10,7 +10,17 @@ Original generation: `exec-c308e046-ba9c-4e30-b08f-afc82b74f57d.png`.
 
 > Use case: stylized-concept. Asset type: original mobile match-three game background illustration for Pocket Sweets. Create a premium, joyful candy garden at twilight, portrait 1024x1536. Soft sculpted 3D confectionery, raspberry-pink candy hills, lavender sky, peach clouds, glossy jewel-like gumdrops, striped candy canes and tiny sugar stars at the extreme edges. A dreamy pink candy-shop pavilion in the lower corner. Luminous saturated raspberry, plum, turquoise accents and warm buttercream. Composition: center 70 percent remains calm smooth lavender-to-pink atmospheric negative space for a readable game board and UI; detailed scenery mostly on bottom 20 percent and outer edges. Gentle cinematic lighting, polished tactile materials, delightful and sophisticated, not noisy. No text, no lettering, no logos, no UI, no checkerboard. Opaque full bleed background.
 
+### Upper scenery revision — 2026-10-10
+
+Edited the original garden with the built-in `image_gen` tool. Replaced
+`app/assets/sweets/garden.webp` at the same 1024×1536 dimensions, WebP quality 86.
+Source: `exec-51409cdb-6e7a-4d0f-9b99-3d9a3c50aab5.png`.
+Visually inspected the generated artwork and verified the bundled WebP decodes.
+
+> Use case: precise-object-edit. Edit target: supplied candy game garden background. Adapt this same portrait illustration so the top has visible candy scenery too. Add a graceful canopy of glossy pink candy-cane curls and candy foliage along the upper corners, with fluffy pink clouds and a few suspended star sweets extending across the upper central area. Place visible details throughout the top quarter including within the central 60% width so they remain visible when cropped on narrow phones. Match the existing polished whimsical 3D candy illustration, pastel pink purple and warm golden lighting. Preserve the existing lower half landscape, candy house, river and sweets as closely as possible. Keep the middle area relatively calm for an overlaid game board. No text, no UI, no border. Preserve portrait 2:3 composition.
+
 ## Candy sprite atlas
+
 
 Output: `app/assets/sweets/candy-atlas.webp` (768×512, lossless WebP after Lanczos
 reduction from 1536×1024). Equal 3×2 grid, row-major order: heart, leaf, star,

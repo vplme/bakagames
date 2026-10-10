@@ -10,6 +10,8 @@ import 'package:game_core/game_core.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
+import 'game_menu_helpers.dart';
+
 void main() {
   setUp(() {
     SharedPreferencesAsyncPlatform.instance =
@@ -62,8 +64,7 @@ void main() {
       () => Future<void>.delayed(const Duration(milliseconds: 600)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Level 1'), findsOneWidget);
-    expect(find.text('Moves: 0'), findsOneWidget);
+    expect(find.text('Level 1 · Moves: 0'), findsOneWidget);
     expect(find.text('Kiwi is getting closer!'), findsNothing);
   });
 
@@ -157,8 +158,10 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 300)),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Level 6'), findsOneWidget);
+      expect(find.text('Level 6 · Moves: 0'), findsOneWidget);
+      await openGameMenu(tester);
       expect(find.text('LOVELY LINES'), findsOneWidget);
+      await closeGameMenu(tester);
       await tester.pageBack();
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(

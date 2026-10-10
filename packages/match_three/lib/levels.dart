@@ -18,6 +18,9 @@ class SweetLevel {
 
   String get tip =>
       '${switch (targets.length) {
+        11 => 'Match coconut snowflakes to clear both diagonals through the middle snowflake. ',
+        10 => 'Match cocoa bonbons to blast a 3×3 area around the middle bonbon. ',
+        9 => 'Match lemon rockets to clear the column through the middle rocket. ',
         8 => 'Match peach twists to clear two sweets on each side of the middle peach. ',
         7 => 'Match raspberry rings to clear diagonal neighbors of the middle ring. ',
         6 => 'Match caramel diamonds to clear direct neighbors of the middle caramel. ',
@@ -32,15 +35,15 @@ class SweetLevel {
 // Unlock after each completed block of 15 campaign levels.
 const stripedUnlockLevel = 16;
 const rainbowUnlockLevel = 31;
-const sweetUnlockLevels = [1, 1, 1, 1, 1, 46, 61, 76];
+const sweetUnlockLevels = [1, 1, 1, 1, 1, 46, 61, 76, 91, 106, 121];
 
 final sweetLevels = List<SweetLevel>.unmodifiable([
   for (var index = 0; index < _authoredLevels.length; index++)
     _withProgression(_authoredLevels[index], index + 1),
-  for (var number = 46; number <= 90; number++)
+  for (var number = 46; number <= 135; number++)
     _withProgression(
       SweetLevel(
-        '${const ['Caramel gardens', 'Raspberry terraces', 'Peach palaces'][(number - 46) ~/ 15]} · ${(number - 46) % 15 + 1}',
+        '${const ['Caramel gardens', 'Raspberry terraces', 'Peach palaces', 'Lemon launchpads', 'Cocoa courtyards', 'Coconut constellations'][(number - 46) ~/ 15]} · ${(number - 46) % 15 + 1}',
         46208 + (number - 46) * 1013,
         [
           for (var type = 0; type < 5; type++)

@@ -1,3 +1,4 @@
+import '../../shell/game_play_layout.dart';
 import '../../shell/play_controls.dart';
 import 'dart:isolate';
 import 'dart:async';
@@ -174,9 +175,6 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                   if (widget.settings != null) widget.settings!.reducedMotion,
                 ]),
                 builder: (context, _) {
-                  final compact =
-                      MediaQuery.sizeOf(context).height < 700 ||
-                      MediaQuery.textScalerOf(context).scale(1) > 1.2;
                   final board = Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: BirdSortBoard(
@@ -184,164 +182,146 @@ class _BirdSortPlayScreenState extends State<BirdSortPlayScreen> {
                       reducedMotion: _reduced,
                     ),
                   );
-                  final content = Column(
-                    mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
-                        child: Row(
-                          children: [
-                            IconButton.filledTonal(
-                              tooltip: 'Back to levels',
-                              onPressed: () => Navigator.maybePop(context),
-                              icon: const Icon(Icons.arrow_back_rounded),
-                            ),
-                            const Expanded(
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'POCKET AVIARY',
-                                    style: TextStyle(
-                                      color: aviaryInk,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 2.6,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton.filledTonal(
-                              tooltip: 'Settings',
-                              onPressed: widget.settings == null
-                                  ? null
-                                  : () => Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (_) => SettingsScreen(
-                                          settings: widget.settings!,
-                                        ),
+                  return GamePlayLayout(
+                    completed: c.state.isWon,
+                    title: 'Pocket Aviary',
+                    status:
+                        'Level ${widget.levelIndex + 1} · Moves: ${c.moveCount}',
+                    color: aviaryCream,
+                    foregroundColor: aviaryInk,
+                    menu: Column(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton.filledTonal(
+                            tooltip: 'Settings',
+                            onPressed: widget.settings == null
+                                ? null
+                                : () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => SettingsScreen(
+                                        settings: widget.settings!,
                                       ),
                                     ),
-                              icon: const Icon(Icons.tune_rounded),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    habitatName(
-                                      widget.levelIndex,
-                                    ).toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Color(0xFF6B8D68),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 2,
-                                    ),
                                   ),
-                                  Text(
-                                    'Level ${widget.levelIndex + 1}',
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      height: 1.2,
-                                      fontWeight: FontWeight.w800,
-                                      color: aviaryInk,
-                                      letterSpacing: -1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 9,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: .8),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                'Moves: ${c.moveCount}',
-                                style: const TextStyle(
-                                  color: aviaryInk,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
-                        child: Row(
-                          children: [
-                            for (var i = 0; i < c.level.colourCount; i++)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 5),
-                                child: Icon(
-                                  Icons.local_florist_rounded,
-                                  size: 17,
-                                  color:
-                                      i < c.departed.length ~/ c.level.capacity
-                                      ? const Color(0xFFE9AF4E)
-                                      : const Color(0xFFCAD7BF),
-                                ),
-                              ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '${c.departed.length ~/ c.level.capacity} / ${c.level.colourCount} flocks home',
-                                textAlign: TextAlign.end,
-                                style: const TextStyle(
-                                  color: aviaryInk,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (c.state.isStuck) _stuckBanner(c),
-                      if (compact)
-                        SizedBox(
-                          height: c.state.branches.length * 66.0,
-                          child: board,
-                        )
-                      else
-                        Expanded(child: board),
-                      if (c.state.isWon)
-                        _winPanel(c)
-                      else ...[
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            c.selected == null
-                                ? 'Tap a flock. Find its feathered friends.'
-                                : 'Choose a glowing perch to land.',
-                            style: const TextStyle(
-                              color: aviaryInk,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            icon: const Icon(Icons.tune_rounded),
                           ),
                         ),
-                        _controls(c),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      habitatName(
+                                        widget.levelIndex,
+                                      ).toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Color(0xFF6B8D68),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Level ${widget.levelIndex + 1}',
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        height: 1.2,
+                                        fontWeight: FontWeight.w800,
+                                        color: aviaryInk,
+                                        letterSpacing: -1.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 9,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: .8),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  'Moves: ${c.moveCount}',
+                                  style: const TextStyle(
+                                    color: aviaryInk,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+                          child: Row(
+                            children: [
+                              for (var i = 0; i < c.level.colourCount; i++)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 5),
+                                  child: Icon(
+                                    Icons.local_florist_rounded,
+                                    size: 17,
+                                    color:
+                                        i <
+                                            c.departed.length ~/
+                                                c.level.capacity
+                                        ? const Color(0xFFE9AF4E)
+                                        : const Color(0xFFCAD7BF),
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${c.departed.length ~/ c.level.capacity} / ${c.level.colourCount} flocks home',
+                                  textAlign: TextAlign.end,
+                                  style: const TextStyle(
+                                    color: aviaryInk,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!c.state.isWon) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              c.selected == null
+                                  ? 'Tap a flock. Find its feathered friends.'
+                                  : 'Choose a glowing perch to land.',
+                              style: const TextStyle(
+                                color: aviaryInk,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          _controls(c),
+                        ],
                       ],
-                    ],
+                    ),
+                    child: Column(
+                      children: [
+                        if (c.state.isStuck) _stuckBanner(c),
+                        Expanded(child: board),
+                        if (c.state.isWon)
+                          Flexible(
+                            child: SingleChildScrollView(child: _winPanel(c)),
+                          ),
+                      ],
+                    ),
                   );
-                  return compact
-                      ? SingleChildScrollView(child: content)
-                      : content;
                 },
               );
             },
