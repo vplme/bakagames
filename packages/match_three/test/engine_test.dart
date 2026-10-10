@@ -1,4 +1,5 @@
 import 'package:match_three/match_three.dart';
+import 'package:match_three/levels.dart';
 import 'package:test/test.dart';
 
 List<Object?> fingerprint(Snapshot s) => [
@@ -10,6 +11,62 @@ List<Object?> fingerprint(Snapshot s) => [
 ];
 
 void main() {
+  test(
+    'limits reject invalid configuration and allow relaxed campaign play',
+    () {
+      expect(() => MatchThree(moveLimit: 0), throwsArgumentError);
+      expect(() => MatchThree(moveLimit: -1), throwsArgumentError);
+      for (final level in sweetLevels) {
+        expect(level.moveLimit, greaterThan(0));
+        expect(level.create().movesRemaining, level.moveLimit);
+        expect(level.create(relaxed: true).movesRemaining, isNull);
+      }
+    },
+  );
+  test(
+    'exhaustion blocks swaps; invalid swaps are free; undo and restart restore moves',
+    () {
+      final game = MatchThree(moveLimit: 1, targets: [999, 999, 999, 999, 999]);
+      final start = fingerprint(game.state);
+      game.swap(6, 7);
+      expect(game.movesRemaining, 1);
+      final move = game.hint()!;
+      game.swap(move.$1, move.$2);
+      expect(game.lost, isTrue);
+      expect(game.movesRemaining, 0);
+      final end = fingerprint(game.state);
+      final next = game.hint()!;
+      expect(game.swap(next.$1, next.$2), isEmpty);
+      expect(fingerprint(game.state), end);
+      game.undo();
+      expect(game.lost, isFalse);
+      expect(game.movesRemaining, 1);
+      expect(fingerprint(game.state), start);
+      game.swap(move.$1, move.$2);
+      expect(fingerprint(game.state), end);
+      game.restart();
+      expect(fingerprint(game.state), start);
+      expect(game.movesRemaining, 1);
+    },
+  );
+  test('a win on the final move takes precedence after full resolution', () {
+    final reference = MatchThree();
+    final moves = <(int, int)>[];
+    while (!reference.won) {
+      final move = reference.hint()!;
+      moves.add(move);
+      reference.swap(move.$1, move.$2);
+    }
+    final game = MatchThree(moveLimit: moves.length);
+    for (final move in moves) {
+      game.swap(move.$1, move.$2);
+    }
+    expect(game.movesRemaining, 0);
+    expect(game.won, isTrue);
+    expect(game.lost, isFalse);
+    expect(fingerprint(game.state), fingerprint(reference.state));
+  });
+
   test('openings are stable, match free and playable across seeds', () {
     for (var seed = 0; seed < 100; seed++) {
       final game = MatchThree(seed: seed);

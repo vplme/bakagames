@@ -7,6 +7,7 @@ import 'package:baka_games/shell/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:game_core/game_core.dart';
+import 'package:match_three/levels.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
@@ -158,7 +159,10 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 300)),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Level 6 · Moves: 0'), findsOneWidget);
+      expect(
+        find.text('${sweetLevels[5].moveLimit} left · Moves: 0'),
+        findsOneWidget,
+      );
       await openGameMenu(tester);
       expect(find.text('LOVELY LINES'), findsOneWidget);
       await closeGameMenu(tester);

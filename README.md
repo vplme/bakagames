@@ -47,7 +47,7 @@ The point is an app you can hand to someone you love and then stop thinking abou
 | --- | --- |
 | **Pocket Aviary** | Sort birds onto branches until each branch holds one species. 500 levels, generated deterministically and verified solvable by the built-in solver, with 15 birds and 50 habitats to unlock as you go. |
 
-**Pocket Sweets** offers 30 match-three picnics with unlimited moves, collection goals, striped and rainbow sweets, cascades, hints, and undo. Progress stays on your device. See [the implementation tracker](docs/match-three-plan.md) for remaining device playtesting. Original glossy candy artwork and a candy-garden backdrop are bundled locally.
+**Pocket Sweets** offers 135 match-three picnics with per-level move limits, an unlimited Relaxed mode, collection goals, striped and rainbow sweets, cascades, hints, and undo. Progress stays on your device. See [the implementation tracker](docs/match-three-plan.md) for remaining device playtesting. Original glossy candy artwork and a candy-garden backdrop are bundled locally.
 
 More to come — the shell is built to hold a library of them.
 
