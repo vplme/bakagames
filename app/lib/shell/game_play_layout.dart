@@ -9,6 +9,7 @@ class GamePlayLayout extends StatefulWidget {
     required this.child,
     required this.menu,
     this.onMenuOpened,
+    this.overlay,
     this.actions = const [],
     this.completed = false,
     this.paused,
@@ -26,6 +27,9 @@ class GamePlayLayout extends StatefulWidget {
   final VoidCallback? onTogglePause;
   final String title, status;
   final Widget child, menu;
+
+  /// Live information painted over play; pointer input passes through to the game.
+  final Widget? overlay;
   final VoidCallback? onMenuOpened, onBack;
   final Color? color, foregroundColor;
 
@@ -120,30 +124,96 @@ class GamePlayLayoutState extends State<GamePlayLayout> {
                   child: IgnorePointer(ignoring: _open, child: widget.child),
                 ),
               ),
-              if (_open)
-                Material(
-                  color: widget.color ?? Theme.of(context).colorScheme.surface,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: Theme.of(context).textTheme.titleLarge,
+              if (!_open && !widget.completed && widget.overlay != null)
+                Positioned(
+                  top: 8,
+                  left: 12,
+                  right: 12,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: IgnorePointer(
+                      child: Material(
+                        key: const Key('gameOverlay'),
+                        color:
+                            (widget.color ??
+                                    Theme.of(context).colorScheme.surface)
+                                .withValues(alpha: .94),
+                        elevation: 3,
+                        borderRadius: BorderRadius.circular(20),
+                        clipBehavior: Clip.antiAlias,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          child: DefaultTextStyle.merge(
+                            style: TextStyle(
+                              color: widget.foregroundColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            child: IconTheme.merge(
+                              data: IconThemeData(
+                                color: widget.foregroundColor,
+                              ),
+                              child: widget.overlay!,
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        widget.menu,
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          onPressed: _toggle,
-                          icon: const Icon(Icons.close),
-                          label: const Text('Close menu'),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
+              if (_open) ...[
+                ModalBarrier(
+                  color: Colors.black26,
+                  onDismiss: closeMenu,
+                  semanticsLabel: 'Close menu',
+                ),
+                LayoutBuilder(
+                  builder: (context, constraints) => Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: 400,
+                          maxHeight: constraints.maxHeight * .8,
+                        ),
+                        child: Material(
+                          key: const Key('gameMenuPanel'),
+                          elevation: 8,
+                          borderRadius: BorderRadius.circular(24),
+                          clipBehavior: Clip.antiAlias,
+                          color:
+                              widget.color ??
+                              Theme.of(context).colorScheme.surface,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  widget.title,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                const SizedBox(height: 12),
+                                widget.menu,
+                                const SizedBox(height: 12),
+                                FilledButton.icon(
+                                  onPressed: _toggle,
+                                  icon: const Icon(Icons.close),
+                                  label: const Text('Close menu'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

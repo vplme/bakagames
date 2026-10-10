@@ -23,6 +23,7 @@ void main() {
               child: GamePlayLayout(
                 title: 'Test game',
                 status: 'Level 1',
+                overlay: const Text('Live objective'),
                 onMenuOpened: () => opened++,
                 menu: Column(
                   children: List.generate(30, (i) => Text('Information $i')),
@@ -41,18 +42,32 @@ void main() {
     );
     expect(tester.getSize(find.byKey(const Key('board'))).height, 520);
     expect(find.text('Information 0'), findsNothing);
+    expect(find.text('Live objective'), findsOneWidget);
+    final boardRect = tester.getRect(find.byKey(const Key('board')));
     await tester.tap(find.byKey(const Key('board')));
     expect(taps, 1);
+    await tester.tapAt(tester.getCenter(find.byKey(const Key('gameOverlay'))));
+    expect(taps, 2);
     await openGameMenu(tester);
     expect(opened, 1);
+    expect(tester.getRect(find.byKey(const Key('board'))), boardRect);
+    expect(
+      tester.getSize(find.byKey(const Key('gameMenuPanel'))).height,
+      lessThan(boardRect.height),
+    );
     expect(find.byKey(const Key('board')), findsOneWidget);
     await tester.tapAt(const Offset(160, 300));
-    expect(taps, 1);
+    expect(taps, 2);
     await tester.ensureVisible(find.text('Information 29'));
     expect(tester.takeException(), isNull);
     await closeGameMenu(tester);
     await tester.tap(find.byKey(const Key('board')));
-    expect(taps, 2);
+    expect(taps, 3);
+    await openGameMenu(tester);
+    await tester.tapAt(Offset(boardRect.center.dx, boardRect.bottom - 4));
+    await tester.pump();
+    expect(find.byKey(const Key('gameMenuPanel')), findsNothing);
+    expect(taps, 3);
   });
 
   testWidgets('system back closes menu before leaving the game', (
