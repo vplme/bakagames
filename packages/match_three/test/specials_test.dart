@@ -215,7 +215,7 @@ void main() {
       expect(sweetLevels.length, 135);
       final turns = <int>[];
       for (final level in sweetLevels) {
-        final g = level.create();
+        final g = level.create(relaxed: true);
         expect(signature(g), signature(level.create()));
         expect(MatchThree.matches(g.state.board), isEmpty);
         for (var t = 0; t < 1000 && !g.won; t++) {

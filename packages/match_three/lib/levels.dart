@@ -1,4 +1,5 @@
 import 'match_three.dart';
+import 'move_limits.dart';
 
 /// Stable authored campaign: indices and seeds must not be reordered.
 class SweetLevel {
@@ -6,15 +7,21 @@ class SweetLevel {
   final int seed;
   final List<int> targets;
   final SpecialRules specials;
+  final int? moveLimit;
   const SweetLevel(
     this.title,
     this.seed,
     this.targets, [
     this.specials = SpecialRules.none,
+    this.moveLimit,
   ]);
 
-  MatchThree create() =>
-      MatchThree(seed: seed, targets: targets, specials: specials);
+  MatchThree create({bool relaxed = false}) => MatchThree(
+    seed: seed,
+    targets: targets,
+    specials: specials,
+    moveLimit: relaxed ? null : moveLimit,
+  );
 
   String get tip =>
       '${switch (targets.length) {
@@ -26,7 +33,7 @@ class SweetLevel {
         6 => 'Match caramel diamonds to clear direct neighbors of the middle caramel. ',
         _ => '',
       }}${switch (specials) {
-        SpecialRules.none => 'Match three to collect sweets. Take as many moves as you like.',
+        SpecialRules.none => 'Match three to collect sweets. Focus on the sweets still needed for your goals.',
         SpecialRules.lines => 'Match four for a striped sweet. Match it again to clear its row or column.',
         SpecialRules.all => 'Match five for a rainbow sweet. Swap it with a neighbor to clear that color.',
       }}';
@@ -69,6 +76,7 @@ SweetLevel _withProgression(SweetLevel level, int number) {
         : number < rainbowUnlockLevel
         ? SpecialRules.lines
         : SpecialRules.all,
+    campaignMoveLimits[number - 1],
   );
 }
 

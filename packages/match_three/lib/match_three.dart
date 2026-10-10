@@ -39,6 +39,7 @@ class MatchThree {
   static const types = 5;
   int get typeCount => targets.length;
   final int seed;
+  final int? moveLimit;
   final SpecialRules specials;
   final List<Sweet>? opening;
   final List<int> targets;
@@ -51,11 +52,15 @@ class MatchThree {
 
   MatchThree({
     this.seed = 731,
+    this.moveLimit,
     List<int>? targets,
     this.specials = SpecialRules.none,
     List<Sweet>? opening,
   }) : opening = opening == null ? null : List.unmodifiable(opening),
        targets = List.unmodifiable(targets ?? [12, 12, 12, 0, 0]) {
+    if (moveLimit != null && moveLimit! <= 0) {
+      throw ArgumentError.value(moveLimit, 'moveLimit', 'Must be positive');
+    }
     if (this.targets.length < types ||
         this.targets.length > 11 ||
         this.targets.any((n) => n < 0)) {
@@ -76,6 +81,9 @@ class MatchThree {
     typeCount,
     (i) => i,
   ).every((i) => _collected[i] >= targets[i]);
+  int? get movesRemaining =>
+      moveLimit == null ? null : (moveLimit! - _moves).clamp(0, moveLimit!);
+  bool get lost => !won && movesRemaining == 0;
   bool get canUndo => _history.isNotEmpty;
 
   int _roll(int limit) {
@@ -258,7 +266,7 @@ class MatchThree {
   }
 
   List<ResolutionStep> swap(int a, int b) {
-    if (won || !adjacent(a, b)) return const [];
+    if (won || lost || !adjacent(a, b)) return const [];
     final before = state;
     _exchange(a, b);
     if (!_colorSwap(a, b) && matches(_board).isEmpty) {
