@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'game_menu_helpers.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -34,6 +36,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await openGameMenu(tester);
     expect(find.text('BOUGAINVILLEA COURTYARD'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

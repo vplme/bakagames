@@ -297,7 +297,9 @@ void main() {
         .first;
     expect(painter.reduced, isTrue);
     expect(tester.takeException(), isNull);
-    await tester.tap(find.byTooltip('Options'));
+    await openGameMenu(tester);
+    await tester.ensureVisible(find.text('Options'));
+    await tester.tap(find.text('Options'));
     await tester.pump();
     expect(
       tester

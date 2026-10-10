@@ -272,6 +272,7 @@ void main() {
     if (find.byKey(const Key('pusherCollection')).evaluate().isEmpty) {
       await tester.ensureVisible(find.text('Guide & collection'));
       await tester.tap(find.text('Guide & collection'));
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
     }
     await tester.ensureVisible(find.byKey(const Key('pusherCollection')));
@@ -298,6 +299,7 @@ void main() {
     if (find.byKey(const Key('pusherCollection')).evaluate().isEmpty) {
       await tester.ensureVisible(find.text('Guide & collection'));
       await tester.tap(find.text('Guide & collection'));
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
     }
     await tester.ensureVisible(find.byKey(const Key('pusherCollection')));

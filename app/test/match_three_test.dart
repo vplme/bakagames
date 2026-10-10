@@ -114,6 +114,7 @@ void main() {
     expect(find.textContaining('Moves: 0').last, findsOneWidget);
     await tester.tap(find.text('Restart'));
     await settleWorker(tester);
+    await openGameMenu(tester);
     expect(find.text('A fresh start!'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
