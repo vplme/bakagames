@@ -77,7 +77,7 @@ class _SweetsHomeScreenState extends State<SweetsHomeScreen> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Swap two neighboring sweets to match three. Collect the sweets shown above the board, with as many moves as you like.',
+              'Swap two neighboring sweets to match three. Collect your goals before moves run out. For unlimited moves, turn on Relaxed mode in the game menu.',
               style: TextStyle(height: 1.5, color: sweetsInk),
             ),
             const SizedBox(height: 20),

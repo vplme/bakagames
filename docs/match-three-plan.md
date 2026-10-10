@@ -10,7 +10,7 @@ ending an implementation session.
 ## Direction and agreed decisions
 
 - Add a cozy match-three game to the Baka Games library alongside Pocket Aviary.
-- **Unlimited moves are confirmed.** Levels end when collection goals are met.
+- **Move limits are now the default.** Per-level calibrated allowances and optional unlimited Relaxed mode supersede the original unlimited-only plan; see match-three-rules.md.
   Move count is only an optional personal best, not a failure condition.
 - Preserve the app's principles: no ads, tracking, accounts, timers, lives,
   paid boosts, or waiting gates. Everything works offline.

@@ -22,7 +22,8 @@ import '../../shell/play_controls.dart';
 const _colors = sweetColors;
 const _names = sweetNames;
 
-MatchThree _createGame(int index) => sweetLevels[index].create();
+MatchThree _createGame((int, bool) input) =>
+    sweetLevels[input.$1].create(relaxed: input.$2);
 (int, int)? _findHint(MatchThree game) => game.hint();
 (MatchThree, List<ResolutionStep>) _resolve((MatchThree, int, int) input) =>
     (input.$1, input.$1.swap(input.$2, input.$3));
@@ -80,11 +81,13 @@ class MatchThreePlayScreen extends StatefulWidget {
   final ProgressStore store;
   final AppSettings settings;
   final int levelIndex;
+  final bool relaxed;
   const MatchThreePlayScreen({
     super.key,
     required this.store,
     required this.settings,
     this.levelIndex = 0,
+    this.relaxed = false,
   });
   @override
   State<MatchThreePlayScreen> createState() => _MatchThreePlayScreenState();
@@ -99,6 +102,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
   Set<int> _hint = {};
   Map<int, Color> _bursts = {};
   int _burstSerial = 0;
+  late bool _relaxed;
   bool _busy = false;
   bool _saving = false;
   bool _saved = false;
@@ -110,6 +114,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
   @override
   void initState() {
     super.initState();
+    _relaxed = widget.relaxed;
     widget.settings.recordPlay('match_three');
     widget.settings.reducedMotion.addListener(_settingsChanged);
     _load();
@@ -137,7 +142,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
       _saveError = null;
     });
     try {
-      final game = await compute(_createGame, widget.levelIndex);
+      final game = await compute(_createGame, (widget.levelIndex, _relaxed));
       if (!mounted) return;
       setState(() {
         _game = game;
@@ -155,7 +160,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
   }
 
   Future<void> _hintMove() async {
-    if (_busy || _game == null || _game!.won) return;
+    if (_busy || _game == null || (_game!.won || _game!.lost)) return;
     setState(() {
       _completionDismissed = false;
       _busy = true;
@@ -195,7 +200,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
       MediaQuery.of(context).disableAnimations;
 
   Future<void> _swap(int a, int b) async {
-    if (_busy || _game == null || _game!.won) return;
+    if (_busy || _game == null || (_game!.won || _game!.lost)) return;
     setState(() {
       _completionDismissed = false;
       _busy = true;
@@ -345,7 +350,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
   }
 
   void _tap(int index) {
-    if (_busy || _game!.won) return;
+    if (_busy || (_game!.won || _game!.lost)) return;
     if (_selected != null && MatchThree.adjacent(_selected!, index)) {
       _swap(_selected!, index);
     } else {
@@ -360,6 +365,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
   Widget build(BuildContext context) {
     final shown = _shown;
     final game = _game;
+    final showFailure = game != null && game.lost && !_busy;
     final showCompletion =
         game != null && game.won && !_busy && !_completionDismissed;
     return Scaffold(
@@ -368,11 +374,11 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
         fit: StackFit.expand,
         children: [
           ExcludeSemantics(
-            excluding: showCompletion,
+            excluding: showCompletion || showFailure,
             child: ExcludeFocus(
-              excluding: showCompletion,
+              excluding: showCompletion || showFailure,
               child: IgnorePointer(
-                ignoring: showCompletion,
+                ignoring: showCompletion || showFailure,
                 child: SweetsBackdrop(
                   child: SafeArea(
                     child: _loadError != null
@@ -395,7 +401,9 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                             title: 'Pocket Sweets',
                             status: _busy
                                 ? 'Collecting…'
-                                : 'Level ${widget.levelIndex + 1} · Moves: ${shown.moves}',
+                                : game.moveLimit == null
+                                ? 'Relaxed · Moves: ${shown.moves}'
+                                : '${game.movesRemaining} left · Moves: ${shown.moves}',
                             color: const Color(0xFFFCE4F1),
                             foregroundColor: sweetsInk,
 
@@ -429,7 +437,10 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                             actions: [
                               IconButton(
                                 tooltip: 'Hint',
-                                onPressed: _busy || _saving ? null : _hintMove,
+                                onPressed:
+                                    _busy || _saving || game.won || game.lost
+                                    ? null
+                                    : _hintMove,
                                 icon: const Icon(Icons.lightbulb_outline),
                               ),
                             ],
@@ -452,6 +463,22 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                     ),
                                     icon: const Icon(Icons.tune_rounded),
                                   ),
+                                ),
+                                SwitchListTile(
+                                  title: const Text('Relaxed mode'),
+                                  subtitle: const Text(
+                                    'Unlimited moves. Changing mode restarts this level.',
+                                  ),
+                                  value: _relaxed,
+                                  onChanged: _busy || _saving
+                                      ? null
+                                      : (value) {
+                                          _relaxed = value;
+                                          _message = value
+                                              ? 'Take your time — unlimited moves.'
+                                              : 'Collect your goals before moves run out.';
+                                          _load();
+                                        },
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
@@ -497,7 +524,9 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       child: Text(
-                                        'Moves: ${shown.moves}',
+                                        game.moveLimit == null
+                                            ? 'Moves: ${shown.moves}\nRelaxed'
+                                            : 'Moves: ${shown.moves}\n${game.movesRemaining} left',
                                         style: const TextStyle(
                                           color: sweetsInk,
                                           fontWeight: FontWeight.w700,
@@ -607,7 +636,8 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                                             0xFFF1CEE3,
                                           ),
                                           foregroundColor: sweetsInk,
-                                          onPressed: _busy || game.won
+                                          onPressed:
+                                              _busy || game.won || game.lost
                                               ? null
                                               : _hintMove,
                                         ),
@@ -923,6 +953,51 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
               ),
             ),
           ),
+          if (showFailure) ...[
+            const ModalBarrier(dismissible: false, color: Color(0x80532149)),
+            Semantics(
+              scopesRoute: true,
+              namesRoute: true,
+              label: 'Out of moves',
+              explicitChildNodes: true,
+              child: AlertDialog(
+                title: const Text('Out of moves'),
+                content: const Text(
+                  'Try a different match, retry for free, or take your time in Relaxed mode.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Back to levels'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        game.undo();
+                        _shown = game.state;
+                        _selected = null;
+                        _hint = {};
+                        _message = 'Last move undone.';
+                      });
+                    },
+                    child: const Text('Undo last move'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _relaxed = true;
+                      _message = 'Take your time — unlimited moves.';
+                      _load();
+                    },
+                    child: const Text('Restart in Relaxed mode'),
+                  ),
+                  FilledButton(
+                    onPressed: _load,
+                    child: const Text('Try again'),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (showCompletion) ...[
             const ModalBarrier(dismissible: false, color: Color(0x80532149)),
             Semantics(
@@ -990,6 +1065,7 @@ class _MatchThreePlayScreenState extends State<MatchThreePlayScreen> {
                     store: widget.store,
                     settings: widget.settings,
                     levelIndex: widget.levelIndex + 1,
+                    relaxed: _relaxed,
                   ),
                 ),
               ),

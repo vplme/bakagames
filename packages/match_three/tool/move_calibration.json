@@ -1,0 +1,1217 @@
+[
+  {
+    "level": 1,
+    "min": 5,
+    "median": 11,
+    "max": 17,
+    "limit": 17,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 2,
+    "min": 5,
+    "median": 8,
+    "max": 12,
+    "limit": 12,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 3,
+    "min": 8,
+    "median": 14,
+    "max": 22,
+    "limit": 21,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 4,
+    "min": 8,
+    "median": 13,
+    "max": 17,
+    "limit": 17,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 5,
+    "min": 5,
+    "median": 8,
+    "max": 15,
+    "limit": 14,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 6,
+    "min": 10,
+    "median": 18,
+    "max": 24,
+    "limit": 22,
+    "completedWithinLimit": 26,
+    "trials": 30
+  },
+  {
+    "level": 7,
+    "min": 10,
+    "median": 14,
+    "max": 21,
+    "limit": 19,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 8,
+    "min": 11,
+    "median": 20,
+    "max": 27,
+    "limit": 26,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 9,
+    "min": 11,
+    "median": 18,
+    "max": 24,
+    "limit": 24,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 10,
+    "min": 7,
+    "median": 11,
+    "max": 15,
+    "limit": 14,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 11,
+    "min": 9,
+    "median": 13,
+    "max": 19,
+    "limit": 17,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 12,
+    "min": 12,
+    "median": 16,
+    "max": 24,
+    "limit": 22,
+    "completedWithinLimit": 27,
+    "trials": 30
+  },
+  {
+    "level": 13,
+    "min": 9,
+    "median": 16,
+    "max": 23,
+    "limit": 22,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 14,
+    "min": 12,
+    "median": 20,
+    "max": 33,
+    "limit": 27,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 15,
+    "min": 12,
+    "median": 18,
+    "max": 27,
+    "limit": 26,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 16,
+    "min": 10,
+    "median": 19,
+    "max": 25,
+    "limit": 26,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 17,
+    "min": 13,
+    "median": 23,
+    "max": 29,
+    "limit": 29,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 18,
+    "min": 13,
+    "median": 20,
+    "max": 29,
+    "limit": 27,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 19,
+    "min": 11,
+    "median": 18,
+    "max": 22,
+    "limit": 22,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 20,
+    "min": 5,
+    "median": 10,
+    "max": 13,
+    "limit": 15,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 21,
+    "min": 12,
+    "median": 18,
+    "max": 24,
+    "limit": 22,
+    "completedWithinLimit": 27,
+    "trials": 30
+  },
+  {
+    "level": 22,
+    "min": 14,
+    "median": 24,
+    "max": 33,
+    "limit": 29,
+    "completedWithinLimit": 26,
+    "trials": 30
+  },
+  {
+    "level": 23,
+    "min": 19,
+    "median": 25,
+    "max": 32,
+    "limit": 32,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 24,
+    "min": 12,
+    "median": 17,
+    "max": 25,
+    "limit": 24,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 25,
+    "min": 7,
+    "median": 13,
+    "max": 20,
+    "limit": 19,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 26,
+    "min": 13,
+    "median": 17,
+    "max": 24,
+    "limit": 22,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 27,
+    "min": 12,
+    "median": 25,
+    "max": 30,
+    "limit": 31,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 28,
+    "min": 11,
+    "median": 18,
+    "max": 27,
+    "limit": 27,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 29,
+    "min": 18,
+    "median": 25,
+    "max": 34,
+    "limit": 29,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 30,
+    "min": 9,
+    "median": 18,
+    "max": 23,
+    "limit": 24,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 31,
+    "min": 9,
+    "median": 19,
+    "max": 31,
+    "limit": 29,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 32,
+    "min": 15,
+    "median": 19,
+    "max": 30,
+    "limit": 29,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 33,
+    "min": 10,
+    "median": 21,
+    "max": 25,
+    "limit": 27,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 34,
+    "min": 13,
+    "median": 19,
+    "max": 33,
+    "limit": 26,
+    "completedWithinLimit": 27,
+    "trials": 30
+  },
+  {
+    "level": 35,
+    "min": 14,
+    "median": 21,
+    "max": 31,
+    "limit": 30,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 36,
+    "min": 17,
+    "median": 23,
+    "max": 37,
+    "limit": 31,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 37,
+    "min": 16,
+    "median": 25,
+    "max": 34,
+    "limit": 33,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 38,
+    "min": 18,
+    "median": 26,
+    "max": 32,
+    "limit": 33,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 39,
+    "min": 16,
+    "median": 29,
+    "max": 39,
+    "limit": 38,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 40,
+    "min": 14,
+    "median": 24,
+    "max": 36,
+    "limit": 35,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 41,
+    "min": 18,
+    "median": 30,
+    "max": 37,
+    "limit": 37,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 42,
+    "min": 19,
+    "median": 27,
+    "max": 36,
+    "limit": 35,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 43,
+    "min": 16,
+    "median": 27,
+    "max": 36,
+    "limit": 31,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 44,
+    "min": 20,
+    "median": 27,
+    "max": 35,
+    "limit": 32,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 45,
+    "min": 21,
+    "median": 31,
+    "max": 49,
+    "limit": 39,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 46,
+    "min": 33,
+    "median": 43,
+    "max": 55,
+    "limit": 55,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 47,
+    "min": 23,
+    "median": 37,
+    "max": 43,
+    "limit": 46,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 48,
+    "min": 28,
+    "median": 41,
+    "max": 49,
+    "limit": 51,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 49,
+    "min": 28,
+    "median": 41,
+    "max": 47,
+    "limit": 49,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 50,
+    "min": 43,
+    "median": 49,
+    "max": 56,
+    "limit": 59,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 51,
+    "min": 32,
+    "median": 44,
+    "max": 57,
+    "limit": 55,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 52,
+    "min": 27,
+    "median": 37,
+    "max": 45,
+    "limit": 46,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 53,
+    "min": 24,
+    "median": 38,
+    "max": 46,
+    "limit": 46,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 54,
+    "min": 18,
+    "median": 33,
+    "max": 44,
+    "limit": 43,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 55,
+    "min": 29,
+    "median": 40,
+    "max": 54,
+    "limit": 55,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 56,
+    "min": 35,
+    "median": 46,
+    "max": 54,
+    "limit": 54,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 57,
+    "min": 21,
+    "median": 42,
+    "max": 53,
+    "limit": 50,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 58,
+    "min": 27,
+    "median": 35,
+    "max": 43,
+    "limit": 43,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 59,
+    "min": 28,
+    "median": 38,
+    "max": 48,
+    "limit": 46,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 60,
+    "min": 33,
+    "median": 45,
+    "max": 52,
+    "limit": 55,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 61,
+    "min": 40,
+    "median": 51,
+    "max": 62,
+    "limit": 62,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 62,
+    "min": 47,
+    "median": 58,
+    "max": 71,
+    "limit": 74,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 63,
+    "min": 37,
+    "median": 48,
+    "max": 61,
+    "limit": 59,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 64,
+    "min": 39,
+    "median": 51,
+    "max": 66,
+    "limit": 62,
+    "completedWithinLimit": 27,
+    "trials": 30
+  },
+  {
+    "level": 65,
+    "min": 39,
+    "median": 51,
+    "max": 62,
+    "limit": 63,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 66,
+    "min": 45,
+    "median": 54,
+    "max": 63,
+    "limit": 64,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 67,
+    "min": 42,
+    "median": 53,
+    "max": 73,
+    "limit": 63,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 68,
+    "min": 48,
+    "median": 62,
+    "max": 77,
+    "limit": 77,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 69,
+    "min": 35,
+    "median": 48,
+    "max": 59,
+    "limit": 59,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 70,
+    "min": 49,
+    "median": 60,
+    "max": 75,
+    "limit": 76,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 71,
+    "min": 42,
+    "median": 54,
+    "max": 62,
+    "limit": 64,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 72,
+    "min": 47,
+    "median": 60,
+    "max": 77,
+    "limit": 73,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 73,
+    "min": 44,
+    "median": 54,
+    "max": 67,
+    "limit": 65,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 74,
+    "min": 49,
+    "median": 59,
+    "max": 86,
+    "limit": 73,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 75,
+    "min": 38,
+    "median": 54,
+    "max": 67,
+    "limit": 71,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 76,
+    "min": 63,
+    "median": 72,
+    "max": 87,
+    "limit": 85,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 77,
+    "min": 54,
+    "median": 73,
+    "max": 83,
+    "limit": 86,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 78,
+    "min": 60,
+    "median": 70,
+    "max": 84,
+    "limit": 87,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 79,
+    "min": 56,
+    "median": 72,
+    "max": 84,
+    "limit": 86,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 80,
+    "min": 56,
+    "median": 69,
+    "max": 78,
+    "limit": 84,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 81,
+    "min": 60,
+    "median": 74,
+    "max": 86,
+    "limit": 88,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 82,
+    "min": 64,
+    "median": 72,
+    "max": 86,
+    "limit": 84,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 83,
+    "min": 68,
+    "median": 79,
+    "max": 91,
+    "limit": 93,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 84,
+    "min": 58,
+    "median": 74,
+    "max": 88,
+    "limit": 88,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 85,
+    "min": 56,
+    "median": 71,
+    "max": 92,
+    "limit": 93,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 86,
+    "min": 63,
+    "median": 71,
+    "max": 78,
+    "limit": 83,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 87,
+    "min": 63,
+    "median": 73,
+    "max": 83,
+    "limit": 85,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 88,
+    "min": 60,
+    "median": 73,
+    "max": 87,
+    "limit": 86,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 89,
+    "min": 58,
+    "median": 74,
+    "max": 87,
+    "limit": 90,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 90,
+    "min": 64,
+    "median": 77,
+    "max": 89,
+    "limit": 95,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 91,
+    "min": 77,
+    "median": 103,
+    "max": 119,
+    "limit": 125,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 92,
+    "min": 78,
+    "median": 95,
+    "max": 115,
+    "limit": 117,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 93,
+    "min": 76,
+    "median": 95,
+    "max": 111,
+    "limit": 115,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 94,
+    "min": 77,
+    "median": 101,
+    "max": 122,
+    "limit": 116,
+    "completedWithinLimit": 27,
+    "trials": 30
+  },
+  {
+    "level": 95,
+    "min": 82,
+    "median": 99,
+    "max": 116,
+    "limit": 121,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 96,
+    "min": 82,
+    "median": 94,
+    "max": 106,
+    "limit": 109,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 97,
+    "min": 85,
+    "median": 103,
+    "max": 137,
+    "limit": 136,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 98,
+    "min": 76,
+    "median": 88,
+    "max": 108,
+    "limit": 106,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 99,
+    "min": 76,
+    "median": 89,
+    "max": 114,
+    "limit": 104,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 100,
+    "min": 82,
+    "median": 93,
+    "max": 104,
+    "limit": 110,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 101,
+    "min": 70,
+    "median": 92,
+    "max": 113,
+    "limit": 115,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 102,
+    "min": 76,
+    "median": 92,
+    "max": 115,
+    "limit": 105,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 103,
+    "min": 71,
+    "median": 91,
+    "max": 108,
+    "limit": 106,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 104,
+    "min": 79,
+    "median": 102,
+    "max": 122,
+    "limit": 117,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 105,
+    "min": 81,
+    "median": 98,
+    "max": 114,
+    "limit": 117,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 106,
+    "min": 91,
+    "median": 106,
+    "max": 125,
+    "limit": 132,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 107,
+    "min": 86,
+    "median": 103,
+    "max": 125,
+    "limit": 127,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 108,
+    "min": 94,
+    "median": 103,
+    "max": 121,
+    "limit": 127,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 109,
+    "min": 92,
+    "median": 105,
+    "max": 133,
+    "limit": 127,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 110,
+    "min": 103,
+    "median": 117,
+    "max": 137,
+    "limit": 149,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 111,
+    "min": 92,
+    "median": 108,
+    "max": 121,
+    "limit": 126,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 112,
+    "min": 95,
+    "median": 110,
+    "max": 134,
+    "limit": 128,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 113,
+    "min": 99,
+    "median": 117,
+    "max": 137,
+    "limit": 139,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 114,
+    "min": 98,
+    "median": 114,
+    "max": 152,
+    "limit": 131,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 115,
+    "min": 92,
+    "median": 111,
+    "max": 133,
+    "limit": 132,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 116,
+    "min": 96,
+    "median": 109,
+    "max": 128,
+    "limit": 129,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 117,
+    "min": 94,
+    "median": 111,
+    "max": 133,
+    "limit": 131,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 118,
+    "min": 85,
+    "median": 108,
+    "max": 132,
+    "limit": 130,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 119,
+    "min": 85,
+    "median": 103,
+    "max": 125,
+    "limit": 123,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 120,
+    "min": 99,
+    "median": 111,
+    "max": 141,
+    "limit": 134,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 121,
+    "min": 107,
+    "median": 120,
+    "max": 136,
+    "limit": 141,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 122,
+    "min": 101,
+    "median": 118,
+    "max": 133,
+    "limit": 139,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 123,
+    "min": 99,
+    "median": 127,
+    "max": 144,
+    "limit": 152,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 124,
+    "min": 101,
+    "median": 123,
+    "max": 138,
+    "limit": 143,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 125,
+    "min": 111,
+    "median": 123,
+    "max": 152,
+    "limit": 157,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 126,
+    "min": 100,
+    "median": 114,
+    "max": 127,
+    "limit": 134,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 127,
+    "min": 100,
+    "median": 121,
+    "max": 135,
+    "limit": 139,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 128,
+    "min": 105,
+    "median": 114,
+    "max": 126,
+    "limit": 129,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 129,
+    "min": 110,
+    "median": 129,
+    "max": 165,
+    "limit": 148,
+    "completedWithinLimit": 27,
+    "trials": 30
+  },
+  {
+    "level": 130,
+    "min": 111,
+    "median": 132,
+    "max": 150,
+    "limit": 156,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 131,
+    "min": 111,
+    "median": 123,
+    "max": 153,
+    "limit": 150,
+    "completedWithinLimit": 28,
+    "trials": 30
+  },
+  {
+    "level": 132,
+    "min": 111,
+    "median": 129,
+    "max": 150,
+    "limit": 152,
+    "completedWithinLimit": 30,
+    "trials": 30
+  },
+  {
+    "level": 133,
+    "min": 108,
+    "median": 126,
+    "max": 156,
+    "limit": 146,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 134,
+    "min": 105,
+    "median": 125,
+    "max": 150,
+    "limit": 146,
+    "completedWithinLimit": 29,
+    "trials": 30
+  },
+  {
+    "level": 135,
+    "min": 107,
+    "median": 132,
+    "max": 159,
+    "limit": 160,
+    "completedWithinLimit": 30,
+    "trials": 30
+  }
+]

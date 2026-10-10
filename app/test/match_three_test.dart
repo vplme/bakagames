@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:game_core/game_core.dart';
 import 'package:match_three/match_three.dart';
+import 'package:match_three/levels.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
@@ -44,6 +45,7 @@ void main() {
     WidgetTester tester,
     MemoryStore store, {
     bool compact = false,
+    bool relaxed = false,
     bool reduced = true,
     bool systemReduced = false,
     int levelIndex = 0,
@@ -65,6 +67,7 @@ void main() {
             store: store,
             settings: settings,
             levelIndex: levelIndex,
+            relaxed: relaxed,
           ),
         ),
       ),
@@ -247,6 +250,80 @@ void main() {
     },
   );
 
+  testWidgets('Relaxed switch restarts and can restore the level limit', (
+    tester,
+  ) async {
+    final store = MemoryStore();
+    await open(tester, store);
+    final engine = sweetLevels.first.create();
+    final move = engine.hint()!;
+    await tester.tap(find.byKey(ValueKey('sweet-cell-${move.$1}')));
+    await tester.tap(find.byKey(ValueKey('sweet-cell-${move.$2}')));
+    await settleWorker(tester);
+    await openGameMenu(tester);
+    await tester.ensureVisible(find.byType(SwitchListTile));
+    await tester.tap(find.byType(SwitchListTile));
+    await settleWorker(tester);
+    expect(find.text('Relaxed · Moves: 0'), findsOneWidget);
+    await openGameMenu(tester);
+    await tester.ensureVisible(find.byType(SwitchListTile));
+    await tester.tap(find.byType(SwitchListTile));
+    await settleWorker(tester);
+    expect(
+      find.text('${sweetLevels.first.moveLimit} left · Moves: 0'),
+      findsOneWidget,
+    );
+    expect(store.progress.completedCount, 0);
+  });
+
+  testWidgets('move exhaustion supports undo, retry and relaxed restart', (
+    tester,
+  ) async {
+    final store = MemoryStore();
+    await open(tester, store, levelIndex: 1);
+    final engine = sweetLevels[1].create();
+    Future<void> play(int a, int b) async {
+      await tester.tap(find.byKey(ValueKey('sweet-cell-$a')));
+      await tester.tap(find.byKey(ValueKey('sweet-cell-$b')));
+      await settleWorker(tester);
+    }
+
+    while (!engine.lost && !engine.won) {
+      final move = engine.hint()!;
+      await play(move.$1, move.$2);
+      engine.swap(move.$1, move.$2);
+    }
+    expect(engine.lost, isTrue);
+    expect(find.text('Out of moves'), findsOneWidget);
+    expect(store.progress.completedCount, 0);
+    await tester.tap(find.text('Undo last move'));
+    await tester.pumpAndSettle();
+    engine.undo();
+    expect(find.text('Out of moves'), findsNothing);
+    final move = engine.hint()!;
+    await play(move.$1, move.$2);
+    await tester.tap(find.text('Try again'));
+    await settleWorker(tester);
+    expect(find.text('Out of moves'), findsNothing);
+    engine.restart();
+    while (!engine.lost && !engine.won) {
+      final move = engine.hint()!;
+      await play(move.$1, move.$2);
+      engine.swap(move.$1, move.$2);
+    }
+    await tester.tap(find.text('Restart in Relaxed mode'));
+    await settleWorker(tester);
+    expect(find.textContaining('Relaxed'), findsWidgets);
+    final relaxedEngine = sweetLevels[1].create(relaxed: true);
+    for (var i = 0; i <= sweetLevels[1].moveLimit!; i++) {
+      final move = relaxedEngine.hint()!;
+      await play(move.$1, move.$2);
+      relaxedEngine.swap(move.$1, move.$2);
+    }
+    expect(find.text('Out of moves'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final compact in [false, true]) {
     testWidgets(
       'completion overlay retries save and advances (compact: $compact)',
@@ -258,7 +335,7 @@ void main() {
           addTearDown(tester.view.resetDevicePixelRatio);
         }
         final store = MemoryStore()..fail = true;
-        await open(tester, store, compact: compact);
+        await open(tester, store, compact: compact, relaxed: true);
         final engine = MatchThree();
         for (var turn = 0; turn < 100 && !engine.won; turn++) {
           final move = engine.hint()!;
