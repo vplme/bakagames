@@ -178,18 +178,23 @@ the pipeline overrides `pubspec.yaml` at build time without editing it.
 
 ## Version numbers, retries, and failures
 
-Normal version codes are UTC seconds since **2020-01-01**. The deployment
-workflow serializes runs across all refs, and resolves the code inside the
-release job. A later rebuilt release gets a larger code, including on a rerun;
-it does not depend on which versions are still visible on the internal track.
-Keep all future Android uploads on this numbering scheme. An old artifact or a
-manually assigned larger number can invalidate the expected upload order.
-The script validates Play's maximum version-code bound.
+Normal version codes are the deployment workflow's `GITHUB_RUN_NUMBER + 1`.
+Code 1 is reserved for bootstrap. Each new workflow run increments the code by
+one automatically; previous runs may mean the first code is greater than 2.
+The visible version (for example 1.0.1) remains independent of this counter.
+Keep using this same workflow: replacing/renaming it can reset its run counter.
+All future uploads must have a code greater than versions distributed to users.
 
-If an upload fails, first check Play Console: it may have accepted the bundle
-before reporting an error. Rerun the failed release job (which rebuilds with a
-fresh code), or start a new manual `upload` run. Do not keep retrying an already
-accepted AAB. The bootstrap bundle is the deliberate exception with fixed code 1.
+A rerun of the same workflow keeps its version code. If Play has already accepted
+that code, start a **new workflow run** with **Run workflow**, instead of rerunning
+the old job. If an upload fails, check Play Console before retrying. The bootstrap
+bundle is the deliberate exception with fixed code 1.
+
+When moving from timestamp codes, remove the high-code bundle from the draft
+release before uploading the new bundle. Verify Play accepts the lower code;
+if a high-code release was distributed, do not switch to lower codes because
+installed users cannot update to them. The already uploaded high code cannot be
+reused even after removing it from a draft.
 
 GitHub's concurrency group prevents overlapping deployments; it is not a durable
 queue of every pushed tag. A newer pending run can replace an older pending run.
