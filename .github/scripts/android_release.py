@@ -2,12 +2,9 @@
 
 import os
 import re
-import time
-
-EPOCH = 1577836800  # 2020-01-01 UTC; well below Play's 2,100,000,000 limit.
 
 
-def resolve(event, ref, version, mode, now):
+def resolve(event, ref, version, mode, run_number):
     if event == "push":
         if not ref.startswith("v"):
             raise ValueError("Release tags must start with v")
@@ -20,7 +17,10 @@ def resolve(event, ref, version, mode, now):
         raise ValueError("Version must be MAJOR.MINOR.PATCH, e.g. 1.0.0")
     if mode not in ("bootstrap", "build-only", "upload"):
         raise ValueError("Unknown release mode")
-    code = 1 if mode == "bootstrap" else int(now) - EPOCH
+    if not re.fullmatch(r"[1-9][0-9]*", str(run_number)):
+        raise ValueError("GitHub run number must be a positive integer")
+    # Reserve code 1 for bootstrap. New workflow runs increment automatically.
+    code = 1 if mode == "bootstrap" else int(run_number) + 1
     if not 1 <= code <= 2100000000:
         raise ValueError("Version code is outside Google Play's supported range")
     return {"version": version, "code": str(code), "upload": str(mode == "upload").lower()}
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         values = resolve(
             os.environ["GITHUB_EVENT_NAME"], os.environ["GITHUB_REF_NAME"],
             os.environ.get("VERSION_INPUT", ""), os.environ.get("MODE_INPUT", ""),
-            time.time(),
+            os.environ["GITHUB_RUN_NUMBER"],
         )
     except ValueError as error:
         raise SystemExit(f"::error::{error}") from error
