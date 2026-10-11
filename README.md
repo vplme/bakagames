@@ -46,10 +46,12 @@ The point is an app you can hand to someone you love and then stop thinking abou
 | Game | What it is |
 | --- | --- |
 | **Pocket Aviary** | Sort birds onto branches until each branch holds one species. 500 levels, generated deterministically and verified solvable by the built-in solver, with 15 birds and 50 habitats to unlock as you go. |
+| **Lantern Mahjong** | Clear 30 solvable, layered garden layouts by matching free tiles. Jade and ivory tiles, hints, unlimited undo, and a lantern-lit theme. |
+| **Moonlit Solitaire** | Draw-one Klondike under a starry sky, with a one-card moon pocket for extra breathing room. 30 seeded deals, hints, unlimited undo, and suit foundations. |
 
 **Pocket Sweets** offers 135 match-three picnics with per-level move limits, an unlimited Relaxed mode, collection goals, striped and rainbow sweets, cascades, hints, and undo. Progress stays on your device. See [the implementation tracker](docs/match-three-plan.md) for remaining device playtesting. Original glossy candy artwork and a candy-garden backdrop are bundled locally.
 
-More to come — the shell is built to hold a library of them.
+Both table games use the shared full-viewport play layout and in-place menu, themed landing screens, deal selection, and local completion records with save retry. Leaving a board starts that deal fresh next time; completed deals and best move counts are kept.
 
 ## Design notes
 

@@ -38,5 +38,7 @@ class GameRegistry {
 /// Maps game_core's Flutter-free icon names to real icons.
 IconData iconFor(String iconName) => switch (iconName) {
   'bird' => Icons.flutter_dash,
+  'mahjong' => Icons.spa_rounded,
+  'solitaire' => Icons.style_rounded,
   _ => Icons.extension,
 };
