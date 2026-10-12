@@ -24,6 +24,8 @@ class TableHome extends StatefulWidget {
   final ProgressStore store;
   final AppSettings settings;
   final Widget Function(int) play;
+  final String summary;
+  final String Function(int)? dealDescription;
   const TableHome({
     super.key,
     required this.definition,
@@ -35,6 +37,8 @@ class TableHome extends StatefulWidget {
     required this.store,
     required this.settings,
     required this.play,
+    this.summary = '30 replayable deals · no timer, your pace',
+    this.dealDescription,
   });
   @override
   State<TableHome> createState() => _TableHomeState();
@@ -89,7 +93,7 @@ class _TableHomeState extends State<TableHome> {
         title: widget.definition.title,
         subtitle: widget.subtitle,
         action: 'Play deal ${next + 1}',
-        summary: '30 replayable deals · no timer, your pace',
+        summary: widget.summary,
         progressTitle: 'Your little collection',
         progressDetail: '${p.completedCount} of 30 deals completed',
         progress: p.completedCount / 30,
@@ -123,9 +127,14 @@ class _TableHomeState extends State<TableHome> {
                       ),
                       title: Text('Deal ${i + 1}'),
                       subtitle: Text(
-                        p.results[i]?.completed == true
-                            ? 'Completed · best ${p.results[i]!.bestMoves} moves'
-                            : 'A fresh little challenge',
+                        [
+                          if (widget.dealDescription != null)
+                            widget.dealDescription!(i),
+                          if (p.results[i]?.completed == true)
+                            'Completed · best ${p.results[i]!.bestMoves} moves'
+                          else if (widget.dealDescription == null)
+                            'A fresh little challenge',
+                        ].join('\n'),
                       ),
                       trailing: Icon(
                         p.results[i]?.completed == true
@@ -173,11 +182,14 @@ class TablePlay extends StatefulWidget {
   final String id, title, rules, status;
   final int deal, moves;
   final bool won, canUndo;
+  final bool completionReady, canHint;
+  final ValueChanged<bool>? onMenuChanged;
   final Color accent;
   final AppSettings settings;
   final ProgressStore store;
   final VoidCallback undo, hint, restart, next;
   final Widget child;
+  final Widget Function(Widget child)? backgroundBuilder;
   const TablePlay({
     super.key,
     required this.id,
@@ -196,6 +208,10 @@ class TablePlay extends StatefulWidget {
     required this.restart,
     required this.next,
     required this.child,
+    this.backgroundBuilder,
+    this.completionReady = true,
+    this.canHint = true,
+    this.onMenuChanged,
   });
   @override
   State<TablePlay> createState() => _TablePlayState();
@@ -260,6 +276,7 @@ class _TablePlayState extends State<TablePlay> {
           title: widget.title,
           status: 'Deal ${widget.deal + 1} · ${widget.status}',
           completed: widget.won,
+          onMenuChanged: widget.onMenuChanged,
           color: tableCream,
           foregroundColor: widget.accent,
           actions: [
@@ -270,7 +287,7 @@ class _TablePlayState extends State<TablePlay> {
             ),
             IconButton(
               tooltip: 'Hint',
-              onPressed: widget.won ? null : widget.hint,
+              onPressed: widget.won || !widget.canHint ? null : widget.hint,
               icon: const Icon(Icons.lightbulb_outline_rounded),
             ),
           ],
@@ -307,64 +324,66 @@ class _TablePlayState extends State<TablePlay> {
               ),
             ],
           ),
-          child: CozyBackdrop(
-            garden: widget.id == 'mahjong',
-            child: widget.won
-                ? Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(28),
-                      child: Card(
-                        child: Padding(
+          child:
+              (widget.backgroundBuilder ??
+              (child) =>
+                  CozyBackdrop(garden: widget.id == 'mahjong', child: child))(
+                widget.won && widget.completionReady
+                    ? Center(
+                        child: SingleChildScrollView(
                           padding: const EdgeInsets.all(28),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CozyFriend(
-                                garden: widget.id == 'mahjong',
-                                bunny: widget.id != 'mahjong',
-                                size: 88,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(28),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CozyFriend(
+                                    garden: widget.id == 'mahjong',
+                                    bunny: widget.id != 'mahjong',
+                                    size: 88,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    widget.id == 'mahjong'
+                                        ? 'Garden aglow!'
+                                        : 'Written in the stars!',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Deal ${widget.deal + 1} complete in ${widget.moves} moves.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  if (saving)
+                                    const Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  if (error != null) ...[
+                                    Text(error!, textAlign: TextAlign.center),
+                                    TextButton(
+                                      onPressed: saving ? null : _save,
+                                      child: const Text('Retry save'),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 16),
+                                  FilledButton(
+                                    onPressed: saved ? widget.next : null,
+                                    child: const Text('Next deal'),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                widget.id == 'mahjong'
-                                    ? 'Garden aglow!'
-                                    : 'Written in the stars!',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Deal ${widget.deal + 1} complete in ${widget.moves} moves.',
-                                textAlign: TextAlign.center,
-                              ),
-                              if (saving)
-                                const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              if (error != null) ...[
-                                Text(error!, textAlign: TextAlign.center),
-                                TextButton(
-                                  onPressed: saving ? null : _save,
-                                  child: const Text('Retry save'),
-                                ),
-                              ],
-                              const SizedBox(height: 16),
-                              FilledButton(
-                                onPressed: saved ? widget.next : null,
-                                child: const Text('Next deal'),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  )
-                : widget.child,
-          ),
+                      )
+                    : widget.child,
+              ),
         ),
       ),
     ),

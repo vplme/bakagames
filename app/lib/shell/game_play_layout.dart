@@ -9,6 +9,7 @@ class GamePlayLayout extends StatefulWidget {
     required this.child,
     required this.menu,
     this.onMenuOpened,
+    this.onMenuChanged,
     this.overlay,
     this.actions = const [],
     this.completed = false,
@@ -31,6 +32,7 @@ class GamePlayLayout extends StatefulWidget {
   /// Live information painted over play; pointer input passes through to the game.
   final Widget? overlay;
   final VoidCallback? onMenuOpened, onBack;
+  final ValueChanged<bool>? onMenuChanged;
   final Color? color, foregroundColor;
 
   @override
@@ -44,6 +46,7 @@ class GamePlayLayoutState extends State<GamePlayLayout> {
   bool closeMenu() {
     if (!_open) return false;
     setState(() => _open = false);
+    widget.onMenuChanged?.call(false);
     return true;
   }
 
@@ -56,6 +59,7 @@ class GamePlayLayoutState extends State<GamePlayLayout> {
   void _toggle() {
     if (!_open) widget.onMenuOpened?.call();
     setState(() => _open = !_open);
+    widget.onMenuChanged?.call(_open);
   }
 
   @override
@@ -72,7 +76,7 @@ class GamePlayLayoutState extends State<GamePlayLayout> {
                   tooltip: 'Back',
                   onPressed: () {
                     if (_open) {
-                      setState(() => _open = false);
+                      closeMenu();
                     } else {
                       (widget.onBack ?? () => Navigator.maybePop(context))();
                     }
@@ -96,7 +100,7 @@ class GamePlayLayoutState extends State<GamePlayLayout> {
                     key: widget.pauseKey,
                     tooltip: widget.paused == true ? 'Resume' : 'Pause',
                     onPressed: () {
-                      setState(() => _open = false);
+                      closeMenu();
                       widget.onTogglePause!();
                     },
                     icon: Icon(
