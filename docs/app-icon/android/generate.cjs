@@ -9,10 +9,11 @@ const layers = ['01-Indigo-Stem.svg', '02-Coral-Arc.svg', '03-Golden-Curve.svg']
   const svg = fs.readFileSync(path.join(assets, name), 'utf8');
   return { fill: svg.match(/fill="([^"]+)"/)[1], d: svg.match(/ d="([^"]+)"/)[1] };
 });
-// Center the source bounds (238,94)-(788,838) in Android's 108dp canvas.
+// Center the source bounds (238,94)-(788,838), then shift 1.5dp right
+// for optical balance. Keep the vertical position unchanged.
 // The complete mark fits inside the central 66dp safe circle.
 const scale = 0.07;
-const tx = 54 - 513 * scale;
+const tx = 54 - 513 * scale + 1.5;
 const ty = 54 - 466 * scale;
 const write = (name, data) => {
   const target = path.join(res, name);

@@ -13,7 +13,7 @@ Verified by opening the saved bundle in Icon Composer and inspecting default, da
 
 Android uses the same indigo, coral, and gold SVG paths as the integrated iOS icon, on warm ivory (`#FFF7E6`). It is a flat vector adaptation; Apple Icon Composer glass effects are not reproduced.
 
-- Android 8+ uses separate adaptive background and foreground resources, with the mark centered inside the 66dp safe circle on a 108dp canvas.
+- Android 8+ uses separate adaptive background and foreground resources, with the mark inside the 66dp safe circle on a 108dp canvas. A 1.5dp horizontal offset to the right provides optical balance; the vertical bounds remain centered.
 - Android 13+ also supplies a monochrome silhouette for launcher-controlled themed colors.
 - Older Android versions use density-specific PNGs (48, 72, 96, 144, and 192 pixels).
 - The manifest continues to reference `@mipmap/ic_launcher`; Android selects the appropriate version automatically.
