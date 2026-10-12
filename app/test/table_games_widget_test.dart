@@ -127,7 +127,11 @@ void main() {
           );
           expect(tester.getSize(first).width, greaterThanOrEqualTo(36));
           final last = find.byKey(
-            Key(mahjong ? 'mahjongTile29' : 'solitaireCard6_6'),
+            Key(
+              mahjong
+                  ? 'mahjongTile${MahjongBoard.deal(0).tiles.length - 1}'
+                  : 'solitaireCard6_6',
+            ),
           );
           await tester.ensureVisible(last);
           await tester.tap(last);

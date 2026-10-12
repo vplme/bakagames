@@ -1,0 +1,272 @@
+[
+  {
+    "deal": 1,
+    "tier": 1,
+    "tiles": 24,
+    "layers": 1,
+    "openingPairs": 6,
+    "randomWins": 244,
+    "trials": 256
+  },
+  {
+    "deal": 2,
+    "tier": 1,
+    "tiles": 26,
+    "layers": 1,
+    "openingPairs": 4,
+    "randomWins": 229,
+    "trials": 256
+  },
+  {
+    "deal": 3,
+    "tier": 1,
+    "tiles": 28,
+    "layers": 1,
+    "openingPairs": 7,
+    "randomWins": 211,
+    "trials": 256
+  },
+  {
+    "deal": 4,
+    "tier": 1,
+    "tiles": 24,
+    "layers": 1,
+    "openingPairs": 6,
+    "randomWins": 232,
+    "trials": 256
+  },
+  {
+    "deal": 5,
+    "tier": 1,
+    "tiles": 26,
+    "layers": 1,
+    "openingPairs": 12,
+    "randomWins": 192,
+    "trials": 256
+  },
+  {
+    "deal": 6,
+    "tier": 1,
+    "tiles": 28,
+    "layers": 1,
+    "openingPairs": 6,
+    "randomWins": 228,
+    "trials": 256
+  },
+  {
+    "deal": 7,
+    "tier": 2,
+    "tiles": 32,
+    "layers": 2,
+    "openingPairs": 12,
+    "randomWins": 188,
+    "trials": 256
+  },
+  {
+    "deal": 8,
+    "tier": 2,
+    "tiles": 34,
+    "layers": 2,
+    "openingPairs": 13,
+    "randomWins": 163,
+    "trials": 256
+  },
+  {
+    "deal": 9,
+    "tier": 2,
+    "tiles": 36,
+    "layers": 2,
+    "openingPairs": 10,
+    "randomWins": 159,
+    "trials": 256
+  },
+  {
+    "deal": 10,
+    "tier": 2,
+    "tiles": 32,
+    "layers": 2,
+    "openingPairs": 9,
+    "randomWins": 179,
+    "trials": 256
+  },
+  {
+    "deal": 11,
+    "tier": 2,
+    "tiles": 34,
+    "layers": 2,
+    "openingPairs": 17,
+    "randomWins": 167,
+    "trials": 256
+  },
+  {
+    "deal": 12,
+    "tier": 2,
+    "tiles": 36,
+    "layers": 2,
+    "openingPairs": 10,
+    "randomWins": 167,
+    "trials": 256
+  },
+  {
+    "deal": 13,
+    "tier": 3,
+    "tiles": 40,
+    "layers": 3,
+    "openingPairs": 17,
+    "randomWins": 116,
+    "trials": 256
+  },
+  {
+    "deal": 14,
+    "tier": 3,
+    "tiles": 42,
+    "layers": 3,
+    "openingPairs": 12,
+    "randomWins": 118,
+    "trials": 256
+  },
+  {
+    "deal": 15,
+    "tier": 3,
+    "tiles": 44,
+    "layers": 3,
+    "openingPairs": 19,
+    "randomWins": 125,
+    "trials": 256
+  },
+  {
+    "deal": 16,
+    "tier": 3,
+    "tiles": 40,
+    "layers": 3,
+    "openingPairs": 18,
+    "randomWins": 77,
+    "trials": 256
+  },
+  {
+    "deal": 17,
+    "tier": 3,
+    "tiles": 42,
+    "layers": 3,
+    "openingPairs": 22,
+    "randomWins": 104,
+    "trials": 256
+  },
+  {
+    "deal": 18,
+    "tier": 3,
+    "tiles": 44,
+    "layers": 3,
+    "openingPairs": 22,
+    "randomWins": 102,
+    "trials": 256
+  },
+  {
+    "deal": 19,
+    "tier": 4,
+    "tiles": 48,
+    "layers": 3,
+    "openingPairs": 20,
+    "randomWins": 43,
+    "trials": 256
+  },
+  {
+    "deal": 20,
+    "tier": 4,
+    "tiles": 50,
+    "layers": 3,
+    "openingPairs": 30,
+    "randomWins": 77,
+    "trials": 256
+  },
+  {
+    "deal": 21,
+    "tier": 4,
+    "tiles": 52,
+    "layers": 3,
+    "openingPairs": 24,
+    "randomWins": 90,
+    "trials": 256
+  },
+  {
+    "deal": 22,
+    "tier": 4,
+    "tiles": 48,
+    "layers": 3,
+    "openingPairs": 14,
+    "randomWins": 65,
+    "trials": 256
+  },
+  {
+    "deal": 23,
+    "tier": 4,
+    "tiles": 50,
+    "layers": 3,
+    "openingPairs": 18,
+    "randomWins": 78,
+    "trials": 256
+  },
+  {
+    "deal": 24,
+    "tier": 4,
+    "tiles": 52,
+    "layers": 3,
+    "openingPairs": 20,
+    "randomWins": 77,
+    "trials": 256
+  },
+  {
+    "deal": 25,
+    "tier": 5,
+    "tiles": 56,
+    "layers": 4,
+    "openingPairs": 27,
+    "randomWins": 59,
+    "trials": 256
+  },
+  {
+    "deal": 26,
+    "tier": 5,
+    "tiles": 58,
+    "layers": 4,
+    "openingPairs": 28,
+    "randomWins": 49,
+    "trials": 256
+  },
+  {
+    "deal": 27,
+    "tier": 5,
+    "tiles": 60,
+    "layers": 4,
+    "openingPairs": 36,
+    "randomWins": 72,
+    "trials": 256
+  },
+  {
+    "deal": 28,
+    "tier": 5,
+    "tiles": 56,
+    "layers": 4,
+    "openingPairs": 24,
+    "randomWins": 38,
+    "trials": 256
+  },
+  {
+    "deal": 29,
+    "tier": 5,
+    "tiles": 58,
+    "layers": 4,
+    "openingPairs": 38,
+    "randomWins": 35,
+    "trials": 256
+  },
+  {
+    "deal": 30,
+    "tier": 5,
+    "tiles": 60,
+    "layers": 4,
+    "openingPairs": 20,
+    "randomWins": 73,
+    "trials": 256
+  }
+]
