@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from the iOS BakaGames vector layers. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="0.07" android:scaleY="0.07"
+        android:translateX="19.589999999999996" android:translateY="21.379999999999995">
+        <path android:fillColor="#000000" android:pathData="M238 710 V194 C238 132 278 94 342 94 C406 94 445 132 445 194 V483 C410 517 410 585 440 621 L450 690 Z" />
+        <path android:fillColor="#000000" android:pathData="M445 309 Q445 291 466 291 H535 C683 291 788 396 788 550 V578 H650 V555 C650 491 599 440 535 440 C499 440 468 456 445 483 Z" />
+        <path android:fillColor="#000000" android:pathData="M238 695 C238 657 261 635 297 635 H403 Q422 635 436 648 C460 668 497 670 535 670 C599 670 650 619 650 555 Q650 550 665 550 H765 Q788 550 788 576 V627 C788 768 697 838 555 838 H347 C275 838 238 800 238 733 Z" />
+    </group>
+</vector>
