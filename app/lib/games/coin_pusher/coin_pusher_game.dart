@@ -378,9 +378,8 @@ class _PusherScreenState extends State<PusherScreen>
                           color: game.model.turboRemaining > 0
                               ? Colors.orange
                               : teal,
-                          semanticsLabel: 'Boost charge',
-                          semanticsValue:
-                              '${game.model.boostCharge} of ${PusherModel.boostTarget}',
+                          semanticsLabel:
+                              'Boost charge: ${game.model.boostCharge} of ${PusherModel.boostTarget}',
                         ),
                       ),
                       if (game.model.lastPerk != null)
