@@ -240,7 +240,14 @@ void paintCabinet(
         toys[prizeIds[c.prize - 1]],
       );
     } else {
-      drawSolidCoin(canvas, c.body.position.x, c.body.position.y, c.z, c.value);
+      drawSolidCoin(
+        canvas,
+        c.body.position.x,
+        c.body.position.y,
+        c.z,
+        c.value,
+        mega: c.isMegaCoin,
+      );
     }
   }
   // The payout opening exposes the tabletop thickness and a lower tray.
@@ -411,13 +418,26 @@ void drawPrize(Canvas canvas, double x, double y, double z, Image? sprite) {
   );
 }
 
-void drawSolidCoin(Canvas canvas, double x, double y, double z, int value) {
-  if (value == 25) {
+void drawSolidCoin(
+  Canvas canvas,
+  double x,
+  double y,
+  double z,
+  int value, {
+  bool mega = false,
+}) {
+  if (value == 25 && !mega) {
     drawGoldBar(canvas, x, y, z);
     return;
   }
   final p = projectCoin(x, y, z + PusherCoin.thickness);
-  final scale = (.60 + y * .03) * (value == 10 ? 1.625 : 1);
+  final scale =
+      (.60 + y * .03) *
+      (mega
+          ? 2.125
+          : value == 10
+          ? 1.625
+          : 1);
   final rect = Rect.fromCenter(
     center: p,
     width: .8 * scale,
@@ -469,6 +489,22 @@ void drawSolidCoin(Canvas canvas, double x, double y, double z, int value) {
       ..strokeWidth = .014,
   );
   paint.style = PaintingStyle.fill;
+  if (mega) {
+    final builder =
+        ParagraphBuilder(
+            ParagraphStyle(fontSize: 20, textAlign: TextAlign.center),
+          )
+          ..pushStyle(TextStyle(color: dark, fontWeight: FontWeight.w800))
+          ..addText('25');
+    final label = builder.build()
+      ..layout(const ParagraphConstraints(width: 64));
+    canvas.save();
+    canvas.translate(p.dx - .5 * scale, p.dy - .16 * scale);
+    canvas.scale(scale / 64, scale / 64);
+    canvas.drawParagraph(label, Offset.zero);
+    canvas.restore();
+    return;
+  }
   final star = Path()
     ..moveTo(p.dx, p.dy - .10 * scale)
     ..lineTo(p.dx + .10 * scale, p.dy)
@@ -535,8 +571,9 @@ void drawGoldBar(Canvas canvas, double x, double y, double z) {
 class _FallingCoin {
   final double x, y;
   final int value, prize;
+  final bool mega;
   double age = 0;
-  _FallingCoin(this.x, this.y, this.value, this.prize);
+  _FallingCoin(this.x, this.y, this.value, this.prize, this.mega);
 }
 
 class PusherGame extends FlameGame {
@@ -593,6 +630,7 @@ class PusherGame extends FlameGame {
               entry.value.$2,
               entry.key.value,
               entry.key.prize,
+              entry.key.isMegaCoin,
             ),
           );
         }
@@ -620,7 +658,7 @@ class PusherGame extends FlameGame {
         drawPrize(canvas, c.x, c.y, -t * 2, toys[prizeIds[c.prize - 1]]);
         continue;
       }
-      drawSolidCoin(canvas, c.x, c.y, -t * 1.8, c.value);
+      drawSolidCoin(canvas, c.x, c.y, -t * 1.8, c.value, mega: c.mega);
     }
   }
 }

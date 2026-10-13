@@ -112,8 +112,18 @@ class _PusherScreenState extends State<PusherScreen>
     }
   }
 
+  String _boostPresentation = '';
+
   void _tick(int earned) {
-    if (earned > 0 && mounted) {
+    if (!mounted) return;
+    final model = _game!.model;
+    final presentation =
+        '${model.boostCharge}:${model.boostLabel}:${model.lastPerk}';
+    if (presentation != _boostPresentation) {
+      _boostPresentation = presentation;
+      setState(() {});
+    }
+    if (earned > 0 || _game!.model.justRewards.isNotEmpty) {
       widget.settings.hapticTap();
       setState(
         () => _message = _game!.model.justRewards.isNotEmpty
@@ -181,7 +191,7 @@ class _PusherScreenState extends State<PusherScreen>
       builder: (context) => AlertDialog(
         title: const Text('Reset this machine?'),
         content: const Text(
-          'Replace the current board with fresh coins, new toys and 40 coins to spend. Your collected toys and lifetime total are kept. The current bonus meter will reset.',
+          'Replace the current board with fresh coins, new toys and 40 coins to spend. Your collected toys and lifetime total are kept. The bonus and boost meters and active perks will reset.',
         ),
         actions: [
           TextButton(
@@ -353,8 +363,32 @@ class _PusherScreenState extends State<PusherScreen>
                     setState(() => _paused = true);
                     _save();
                   },
-                  overlay: Text(
-                    '${game.model.bonusRemaining} to +10 bonus${_paused ? ' · Paused' : ''}',
+                  overlay: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${game.model.boostLabel}${_paused ? ' · Paused' : ''}',
+                      ),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 180,
+                        child: LinearProgressIndicator(
+                          key: const Key('pusherBoost'),
+                          value: game.model.boostProgress,
+                          color: game.model.turboRemaining > 0
+                              ? Colors.orange
+                              : teal,
+                          semanticsLabel:
+                              'Boost charge: ${game.model.boostCharge} of ${PusherModel.boostTarget}',
+                        ),
+                      ),
+                      if (game.model.lastPerk != null)
+                        Text(
+                          game.model.lastPerk == 'Mega coin'
+                              ? 'Mega coin · worth 25'
+                              : game.model.lastPerk!,
+                        ),
+                    ],
                   ),
                   menu: Column(
                     children: [
@@ -420,7 +454,7 @@ class _PusherScreenState extends State<PusherScreen>
                         title: const Text('Guide & collection'),
                         children: [
                           const Text(
-                            'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.',
+                            'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.\nBoost: fallen coins add 1 charge, animals add 4, including sides. At ${PusherModel.boostTarget}, get a random perk: a 40-coin shower, 10 seconds of turbo pushing, or a mega coin worth 25.',
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
@@ -673,7 +707,7 @@ class _PusherHomeState extends State<_PusherHome> {
             child: Text(
               'Tap the machine to choose where to drop. The drop button repeats your last position.\n\n'
               'Stack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\n\n'
-              'Collect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.\n\n'
+              'Collect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.\nBoost: fallen coins add 1 charge, animals add 4, including sides. At ${PusherModel.boostTarget}, get a random perk: a 40-coin shower, 10 seconds of turbo pushing, or a mega coin worth 25.\n\n'
               'Unlock new toys every 250 lifetime coins. Push them into the front tray to keep them. Refills are always free.',
               style: TextStyle(fontSize: 16, height: 1.6),
             ),
