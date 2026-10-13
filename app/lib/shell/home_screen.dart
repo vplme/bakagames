@@ -310,7 +310,9 @@ class _GameCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 17),
                 Text(
-                  progress == null
+                  !entry.showsLevelProgress
+                      ? 'A freshly shuffled deck every time'
+                      : progress == null
                       ? 'Loading progress…'
                       : progress!.completedCount == 0
                       ? 'Ready for your first level'
@@ -322,21 +324,22 @@ class _GameCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    minHeight: 4,
-                    value: progress == null
-                        ? 0
-                        : math.min(
-                            1,
-                            progress!.completedCount /
-                                math.max(1, entry.definition.levelCount),
-                          ),
-                    color: entry.accentColor.withValues(alpha: .65),
-                    backgroundColor: entry.accentColor.withValues(alpha: .08),
+                if (entry.showsLevelProgress)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      minHeight: 4,
+                      value: progress == null
+                          ? 0
+                          : math.min(
+                              1,
+                              progress!.completedCount /
+                                  math.max(1, entry.definition.levelCount),
+                            ),
+                      color: entry.accentColor.withValues(alpha: .65),
+                      backgroundColor: entry.accentColor.withValues(alpha: .08),
+                    ),
                   ),
-                ),
                 const SizedBox(height: 18),
                 Row(
                   children: [

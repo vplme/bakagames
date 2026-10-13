@@ -48,7 +48,9 @@ class _TableHomeState extends State<TableHome> {
   late Future<GameProgress> progress = widget.store.load(widget.definition.id);
   void reload() {
     if (mounted) {
-      setState(() => progress = widget.store.load(widget.definition.id));
+      setState(() {
+        progress = widget.store.load(widget.definition.id);
+      });
     }
   }
 
@@ -184,6 +186,7 @@ class TablePlay extends StatefulWidget {
   final bool won, canUndo;
   final bool completionReady, canHint;
   final ValueChanged<bool>? onMenuChanged;
+  final bool numberedDeals;
   final Color accent;
   final AppSettings settings;
   final ProgressStore store;
@@ -212,6 +215,7 @@ class TablePlay extends StatefulWidget {
     this.completionReady = true,
     this.canHint = true,
     this.onMenuChanged,
+    this.numberedDeals = true,
   });
   @override
   State<TablePlay> createState() => _TablePlayState();
@@ -222,9 +226,15 @@ class _TablePlayState extends State<TablePlay> {
   bool saving = false, saved = false;
   String? error;
   @override
+  void initState() {
+    super.initState();
+    widget.settings.recordPlay(widget.id);
+  }
+
+  @override
   void didUpdateWidget(covariant TablePlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.won && !oldWidget.won) {
+    if (widget.numberedDeals && widget.won && !oldWidget.won) {
       _save();
     }
     if (!widget.won) {
@@ -274,7 +284,9 @@ class _TablePlayState extends State<TablePlay> {
         child: GamePlayLayout(
           key: layout,
           title: widget.title,
-          status: 'Deal ${widget.deal + 1} · ${widget.status}',
+          status: widget.numberedDeals
+              ? 'Deal ${widget.deal + 1} · ${widget.status}'
+              : widget.status,
           completed: widget.won,
           onMenuChanged: widget.onMenuChanged,
           color: tableCream,
@@ -294,24 +306,33 @@ class _TablePlayState extends State<TablePlay> {
           menu: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('${widget.moves} moves · Deal ${widget.deal + 1}'),
+              Text(
+                widget.numberedDeals
+                    ? '${widget.moves} moves · Deal ${widget.deal + 1}'
+                    : '${widget.moves} moves',
+              ),
               const SizedBox(height: 12),
               Text(widget.rules),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: saving || (widget.won && !saved)
+                onPressed:
+                    saving || (widget.numberedDeals && widget.won && !saved)
                     ? null
                     : () => action(widget.restart),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Restart this deal'),
+                label: Text(
+                  widget.numberedDeals ? 'Restart this deal' : 'New deal',
+                ),
               ),
-              OutlinedButton.icon(
-                onPressed: saving || (widget.won && !saved)
-                    ? null
-                    : () => action(widget.next),
-                icon: const Icon(Icons.style),
-                label: const Text('Next deal'),
-              ),
+              if (widget.numberedDeals)
+                OutlinedButton.icon(
+                  onPressed:
+                      saving || (widget.numberedDeals && widget.won && !saved)
+                      ? null
+                      : () => action(widget.next),
+                  icon: const Icon(Icons.style),
+                  label: const Text('Next deal'),
+                ),
               TextButton.icon(
                 onPressed: () => Navigator.push(
                   context,
@@ -356,7 +377,9 @@ class _TablePlayState extends State<TablePlay> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    'Deal ${widget.deal + 1} complete in ${widget.moves} moves.',
+                                    widget.numberedDeals
+                                        ? 'Deal ${widget.deal + 1} complete in ${widget.moves} moves.'
+                                        : 'Completed in ${widget.moves} moves.',
                                     textAlign: TextAlign.center,
                                   ),
                                   if (saving)
@@ -373,8 +396,14 @@ class _TablePlayState extends State<TablePlay> {
                                   ],
                                   const SizedBox(height: 16),
                                   FilledButton(
-                                    onPressed: saved ? widget.next : null,
-                                    child: const Text('Next deal'),
+                                    onPressed: !widget.numberedDeals || saved
+                                        ? widget.next
+                                        : null,
+                                    child: Text(
+                                      widget.numberedDeals
+                                          ? 'Next deal'
+                                          : 'New deal',
+                                    ),
                                   ),
                                 ],
                               ),

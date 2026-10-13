@@ -84,6 +84,63 @@ void main() {
     );
   }
 
+  for (final id in ['mahjong', 'solitaire']) {
+    testWidgets('$id moves to the top after playing and persists recency', (
+      tester,
+    ) async {
+      final settings = AppSettings()..reducedMotion.value = true;
+      final store = MemoryStore();
+      final otherId = id == 'mahjong' ? 'solitaire' : 'mahjong';
+      await settings.recordPlay(otherId);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HomeScreen(
+            registry: GameRegistry([
+              mahjongEntry(store: store, settings: settings),
+              solitaireEntry(store: store, settings: settings),
+            ]),
+            store: store,
+            settings: settings,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final card = find.byKey(ValueKey('game-card-$id'));
+      final otherCard = find.byKey(ValueKey('game-card-$otherId'));
+      expect(
+        tester.getTopLeft(otherCard).dx,
+        lessThan(tester.getTopLeft(card).dx),
+      );
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      expect(settings.lastPlayed.containsKey(id), isFalse);
+      await tester.ensureVisible(
+        find.text(id == 'mahjong' ? 'Play deal 1' : 'Play a new deal'),
+      );
+      await tester.tap(
+        find.text(id == 'mahjong' ? 'Play deal 1' : 'Play a new deal'),
+      );
+      await tester.pumpAndSettle();
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      navigator.pop();
+      await tester.pumpAndSettle();
+      navigator.pop();
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(card).dx,
+        lessThan(tester.getTopLeft(otherCard).dx),
+      );
+      final restored = AppSettings();
+      await restored.loadRecency([id, otherId]);
+      expect(
+        restored.lastPlayed[id],
+        greaterThan(restored.lastPlayed[otherId]!),
+      );
+      expect(store.data, isEmpty);
+    });
+  }
+
   for (final size in [
     const Size(390, 844),
     const Size(768, 1024),
@@ -208,14 +265,64 @@ void main() {
         await tester.tap(find.text(entry.definition.title));
         await tester.pumpAndSettle();
         expect(find.text('All games'), findsOneWidget);
-        await tester.ensureVisible(find.text('Play deal 1'));
-        await tester.tap(find.text('Play deal 1'));
+        await tester.ensureVisible(
+          find.text(mahjong ? 'Play deal 1' : 'Play a new deal'),
+        );
+        await tester.tap(
+          find.text(mahjong ? 'Play deal 1' : 'Play a new deal'),
+        );
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('gameMenu')), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );
   }
+
+  testWidgets('Solitaire new deal reshuffles and clears moves and undo', (
+    tester,
+  ) async {
+    final settings = AppSettings()..hapticsOn.value = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SolitaireScreen(store: MemoryStore(), settings: settings),
+      ),
+    );
+    List<int> visibleCards() => tester
+        .widgetList<MoonCardFace>(find.byType(MoonCardFace))
+        .where((face) => face.card != null)
+        .map((face) => face.card!.id)
+        .toList();
+    final original = visibleCards();
+    await tester.tap(find.byKey(const Key('solitaireStock')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('gameMenu')));
+    await tester.pump();
+    expect(find.text('Restart this deal'), findsNothing);
+    expect(find.text('Next deal'), findsNothing);
+    await tester.ensureVisible(find.text('New deal'));
+    await tester.tap(find.text('New deal'));
+    await tester.pumpAndSettle();
+    expect(visibleCards(), isNot(equals(original)));
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byWidgetPredicate(
+              (widget) => widget is IconButton && widget.tooltip == 'Undo',
+            ),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(find.textContaining('0 moves'), findsOneWidget);
+    expect(find.textContaining('Deal 1'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SolitaireScreen(store: MemoryStore(), settings: settings),
+      ),
+    );
+    expect(visibleCards(), isNot(equals(original)));
+  });
 
   testWidgets('completion retries failed save and credits a deal only once', (
     tester,
