@@ -603,7 +603,7 @@ void main() {
       if (model.balance == 0) model.refill();
       model.update(1 / 60);
     }
-    expect(model.coins.length, lessThanOrEqualTo(160));
+    expect(model.coins.length, lessThanOrEqualTo(PusherModel.maxBoardCoins));
     // Random piles need not pay out within a fixed time; verify stability.
     expect(model.balance, greaterThanOrEqualTo(0));
     expect(

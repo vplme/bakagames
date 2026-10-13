@@ -34,12 +34,13 @@ class PusherCoin {
   final int value;
   static const thickness = .22;
   final int prize;
+  final bool isMegaCoin;
   bool get isLargeCoin => prize == 0 && value == 10;
-  bool get isGoldBar => prize == 0 && value == 25;
-  bool get isSpecial => isLargeCoin || isGoldBar;
+  bool get isGoldBar => prize == 0 && value == 25 && !isMegaCoin;
+  bool get isSpecial => isLargeCoin || isGoldBar || isMegaCoin;
   double get radius => prize > 0
       ? .72
-      : isGoldBar
+      : isGoldBar || isMegaCoin
       ? .85
       : isLargeCoin
       ? .65
@@ -50,7 +51,14 @@ class PusherCoin {
       ? .38
       : thickness;
   double z, vz;
-  PusherCoin(this.body, this.value, this.z, this.vz, this.prize);
+  PusherCoin(
+    this.body,
+    this.value,
+    this.z,
+    this.vz,
+    this.prize, [
+    this.isMegaCoin = false,
+  ]);
 }
 
 class _HeightFilter extends ContactFilter {
@@ -87,6 +95,17 @@ class PusherModel {
   final List<String> justCollected = [];
   final List<String> justUnlocked = [];
   final List<String> justRewards = [];
+  static const boostTarget = 200;
+  static const maxBoardCoins = 320;
+  int boostCharge = 0, pendingShowerCoins = 0, pendingMegaCoins = 0;
+  double turboRemaining = 0, showerCooldown = 0;
+  String? lastPerk;
+  double get boostProgress => boostCharge / boostTarget;
+  String get boostLabel => turboRemaining > 0
+      ? 'Turbo pusher · ${turboRemaining.ceil()}s'
+      : pendingShowerCoins > 0
+      ? 'Coin shower · $pendingShowerCoins left'
+      : 'Boost $boostCharge / $boostTarget';
   int comboCoins = 0, pendingLargeCoins = 0, pendingGoldBars = 0;
   double comboRemaining = 0;
   int get unlockedPrizeCount =>
@@ -148,6 +167,28 @@ class PusherModel {
           collection[entry.key] = entry.value as int;
         }
       }
+      boostCharge = (saved['boostCharge'] as int?) ?? 0;
+      pendingShowerCoins = (saved['pendingShowerCoins'] as int?) ?? 0;
+      pendingMegaCoins = (saved['pendingMegaCoins'] as int?) ?? 0;
+      turboRemaining = (saved['turboRemaining'] as num?)?.toDouble() ?? 0;
+      showerCooldown = (saved['showerCooldown'] as num?)?.toDouble() ?? 0;
+      lastPerk = saved['lastPerk'] as String?;
+      if (boostCharge < 0 ||
+          boostCharge >= boostTarget ||
+          pendingShowerCoins < 0 ||
+          pendingMegaCoins < 0 ||
+          !turboRemaining.isFinite ||
+          turboRemaining < 0 ||
+          !showerCooldown.isFinite ||
+          showerCooldown < 0 ||
+          (lastPerk != null &&
+              ![
+                'Coin shower',
+                'Turbo pusher',
+                'Mega coin',
+              ].contains(lastPerk))) {
+        throw const FormatException('Invalid boost progress');
+      }
       comboCoins = (saved['comboCoins'] as int?) ?? 0;
       comboRemaining = (saved['comboRemaining'] as num?)?.toDouble() ?? 0;
       pendingLargeCoins = (saved['pendingLargeCoins'] as int?) ?? 0;
@@ -174,20 +215,24 @@ class PusherModel {
         throw const FormatException('Invalid economy');
       }
       final rows = saved['coins'] as List;
-      if (rows.length > 160) throw const FormatException('Too many coins');
+      if (rows.length > maxBoardCoins) {
+        throw const FormatException('Too many coins');
+      }
       for (final row in rows) {
         final r = (row as List).cast<num>();
-        if (r.length !=
-                (saved['version'] == 1
-                    ? 5
-                    : saved['version'] == 2
-                    ? 7
-                    : 8) ||
+        if ((r.length !=
+                    (saved['version'] == 1
+                        ? 5
+                        : saved['version'] == 2
+                        ? 7
+                        : 8) &&
+                !(saved['version'] == 3 && r.length == 9)) ||
             r.any((n) => !n.toDouble().isFinite) ||
             (![1, 5, 10, 25].contains(r[4])) ||
             (r.length >= 7 && r[5] < 0) ||
-            (r.length == 8 &&
-                (r[7] < 0 || r[7] > prizeIds.length || r[7] != r[7].toInt()))) {
+            (r.length >= 8 &&
+                (r[7] < 0 || r[7] > prizeIds.length || r[7] != r[7].toInt())) ||
+            (r.length == 9 && (r[8] != 1 || r[4] != 25 || r[7] != 0))) {
           throw const FormatException('Invalid coin');
         }
         _coin(
@@ -198,7 +243,8 @@ class PusherModel {
           vy: r[3].toDouble(),
           z: r.length >= 7 ? r[5].toDouble() : 0,
           vz: r.length >= 7 ? r[6].toDouble() : 0,
-          prize: r.length == 8 ? r[7].toInt() : 0,
+          prize: r.length >= 8 ? r[7].toInt() : 0,
+          mega: r.length == 9,
         );
       }
     } else {
@@ -229,6 +275,7 @@ class PusherModel {
     double z = 0,
     double vz = 0,
     int prize = 0,
+    bool mega = false,
   }) {
     final body = world.createBody(
       BodyDef(
@@ -239,7 +286,7 @@ class PusherModel {
         fixedRotation: true,
       ),
     );
-    final coin = PusherCoin(body, value, z, vz, prize);
+    final coin = PusherCoin(body, value, z, vz, prize, mega);
     body.createFixture(
       FixtureDef(
         coin.isGoldBar
@@ -256,7 +303,7 @@ class PusherModel {
 
   bool drop(double x) {
     dropBlockedReason = null;
-    if (balance == 0 || coins.length >= 160 || cooldown > 0) {
+    if (balance == 0 || coins.length >= maxBoardCoins || cooldown > 0) {
       dropBlockedReason = balance == 0
           ? 'Refill your coins to keep playing.'
           : 'Wait for room on the board.';
@@ -299,7 +346,8 @@ class PusherModel {
   }
 
   void _spawnPrize({int? initialSlot}) {
-    if (coins.length >= 160 || coins.where((c) => c.prize > 0).length >= 3) {
+    if (coins.length >= maxBoardCoins ||
+        coins.where((c) => c.prize > 0).length >= 3) {
       return;
     }
     final x = initialSlot == null
@@ -356,6 +404,9 @@ class PusherModel {
     comboRemaining = 0;
     pendingLargeCoins = 0;
     pendingGoldBars = 0;
+    boostCharge = pendingShowerCoins = pendingMegaCoins = 0;
+    turboRemaining = showerCooldown = 0;
+    lastPerk = null;
     dropBlockedReason = null;
     pusher.setTransform(Vector2(5, pusherY), 0);
     pusher.linearVelocity = Vector2.zero();
@@ -380,7 +431,9 @@ class PusherModel {
       comboRemaining = math.max(0, comboRemaining - step);
       if (comboRemaining == 0) comboCoins = 0;
       cooldown = math.max(0, cooldown - step);
-      phase = (phase + step * 1.6) % (2 * math.pi);
+      turboRemaining = math.max(0, turboRemaining - step);
+      showerCooldown = math.max(0, showerCooldown - step);
+      phase = (phase + step * (turboRemaining > 0 ? 3.2 : 1.6)) % (2 * math.pi);
       pusher.linearVelocity = Vector2(0, (pusherY - pusher.position.y) / step);
       _stepHeights(step);
       world.stepDt(step);
@@ -428,11 +481,17 @@ class PusherModel {
               soundEvents.add('bonus');
             }
           }
+          boostCharge += c.prize > 0 ? 4 : 1;
+          while (boostCharge >= boostTarget) {
+            boostCharge -= boostTarget;
+            _triggerPerk();
+          }
           world.destroyBody(c.body);
           coins.remove(c);
         }
       }
       _spawnSpecialRewards();
+      _spawnBoostRewards();
     }
     justUnlocked.addAll(
       prizeNames.sublist(previousUnlockCount, unlockedPrizeCount),
@@ -441,8 +500,53 @@ class PusherModel {
     return earned;
   }
 
+  void _triggerPerk() {
+    final choice = (_random() * 3).floor();
+    switch (choice) {
+      case 0:
+        pendingShowerCoins += 40;
+        lastPerk = 'Coin shower';
+      case 1:
+        turboRemaining += 10;
+        lastPerk = 'Turbo pusher';
+      case 2:
+        pendingMegaCoins++;
+        lastPerk = 'Mega coin';
+    }
+    justRewards.add(
+      '$lastPerk! ${choice == 2
+          ? 'Worth 25 in the tray'
+          : choice == 1
+          ? '10 seconds of double-speed pushing'
+          : '40 free coins'}',
+    );
+    soundEvents.add('bonus');
+  }
+
+  void _spawnBoostRewards() {
+    if (coins.length >= maxBoardCoins) return;
+    final mega = pendingMegaCoins > 0;
+    if (!mega && (pendingShowerCoins == 0 || showerCooldown > 0)) return;
+    final x = 1.5 + _random() * 7;
+    final y = 4.5 + _random() * 3;
+    final radius = mega ? .85 : .4;
+    final top = coins
+        .where(
+          (c) => (c.body.position - Vector2(x, y)).length < c.radius + radius,
+        )
+        .fold<double>(0, (h, c) => math.max(h, c.z + c.height));
+    _coin(x, y, mega ? 25 : 1, z: top + dropHeight, mega: mega);
+    if (mega) {
+      pendingMegaCoins--;
+    } else {
+      pendingShowerCoins--;
+      showerCooldown = .10;
+    }
+    soundEvents.add('reward_spawn');
+  }
+
   void _spawnSpecialRewards() {
-    while (coins.length < 160 &&
+    while (coins.length < maxBoardCoins &&
         coins.where((c) => c.isSpecial).length < 10 &&
         (pendingGoldBars > 0 || pendingLargeCoins > 0)) {
       final bar = pendingGoldBars > 0;
@@ -556,6 +660,12 @@ class PusherModel {
     'bonus': bonus,
     'drops': drops,
     'phase': phase,
+    'boostCharge': boostCharge,
+    'pendingShowerCoins': pendingShowerCoins,
+    'pendingMegaCoins': pendingMegaCoins,
+    'turboRemaining': turboRemaining,
+    'showerCooldown': showerCooldown,
+    'lastPerk': lastPerk,
     'comboCoins': comboCoins,
     'comboRemaining': comboRemaining,
     'pendingLargeCoins': pendingLargeCoins,
@@ -571,6 +681,7 @@ class PusherModel {
           c.z,
           c.vz,
           c.prize,
+          if (c.isMegaCoin) 1,
         ],
     ],
   };
