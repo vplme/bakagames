@@ -16,12 +16,14 @@ class GameEntry {
   final String subtitle;
   final String category;
   final Color accentColor;
+  final bool showsLevelProgress;
 
   const GameEntry({
     required this.definition,
     required this.buildPlayScreen,
     required this.buildLevelSelect,
     this.buildHomeScreen,
+    this.showsLevelProgress = true,
     this.buildPreview,
     this.subtitle = 'A little challenge for your next break.',
     this.category = 'Puzzle',

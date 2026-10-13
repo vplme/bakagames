@@ -39,7 +39,7 @@ class SolitaireBoard {
     this.moves,
   );
 
-  factory SolitaireBoard.deal(int seed) {
+  factory SolitaireBoard.deal([int? seed]) {
     final deck = [
       for (var s = 0; s < 4; s++)
         for (var r = 1; r <= 13; r++) MoonCard(s, r),
