@@ -29,15 +29,19 @@ const prizeNames = [
 ];
 const prizeUnlockCoins = [0, 0, 0, 250, 500, 750, 1000, 1250, 1500, 1750, 2000];
 
+enum RareCoin { none, rainbow, heart }
+
 class PusherCoin {
   final Body body;
   final int value;
   static const thickness = .22;
   final int prize;
   final bool isMegaCoin;
+  final RareCoin rare;
   bool get isLargeCoin => prize == 0 && value == 10;
   bool get isGoldBar => prize == 0 && value == 25 && !isMegaCoin;
-  bool get isSpecial => isLargeCoin || isGoldBar || isMegaCoin;
+  bool get isSpecial =>
+      isLargeCoin || isGoldBar || isMegaCoin || rare != RareCoin.none;
   double get radius => prize > 0
       ? .72
       : isGoldBar || isMegaCoin
@@ -58,6 +62,7 @@ class PusherCoin {
     this.vz,
     this.prize, [
     this.isMegaCoin = false,
+    this.rare = RareCoin.none,
   ]);
 }
 
@@ -99,6 +104,8 @@ class PusherModel {
   static const maxBoardCoins = 320;
   int boostCharge = 0, pendingShowerCoins = 0, pendingMegaCoins = 0;
   double turboRemaining = 0, showerCooldown = 0;
+  double rainbowRemaining = 0;
+  int get earningsMultiplier => rainbowRemaining > 0 ? 2 : 1;
   String? lastPerk;
   double get boostProgress => boostCharge / boostTarget;
   String get boostLabel => turboRemaining > 0
@@ -173,6 +180,12 @@ class PusherModel {
       turboRemaining = (saved['turboRemaining'] as num?)?.toDouble() ?? 0;
       showerCooldown = (saved['showerCooldown'] as num?)?.toDouble() ?? 0;
       lastPerk = saved['lastPerk'] as String?;
+      rainbowRemaining = (saved['rainbowRemaining'] as num?)?.toDouble() ?? 0;
+      if (!rainbowRemaining.isFinite ||
+          rainbowRemaining < 0 ||
+          rainbowRemaining > 60) {
+        throw const FormatException('Invalid rainbow duration');
+      }
       if (boostCharge < 0 ||
           boostCharge >= boostTarget ||
           pendingShowerCoins < 0 ||
@@ -232,7 +245,10 @@ class PusherModel {
             (r.length >= 7 && r[5] < 0) ||
             (r.length >= 8 &&
                 (r[7] < 0 || r[7] > prizeIds.length || r[7] != r[7].toInt())) ||
-            (r.length == 9 && (r[8] != 1 || r[4] != 25 || r[7] != 0))) {
+            (r.length == 9 &&
+                (r[7] != 0 ||
+                    ![1, 2, 3].contains(r[8]) ||
+                    (r[8] == 1 ? r[4] != 25 : r[4] != 1)))) {
           throw const FormatException('Invalid coin');
         }
         _coin(
@@ -244,7 +260,10 @@ class PusherModel {
           z: r.length >= 7 ? r[5].toDouble() : 0,
           vz: r.length >= 7 ? r[6].toDouble() : 0,
           prize: r.length >= 8 ? r[7].toInt() : 0,
-          mega: r.length == 9,
+          mega: r.length == 9 && r[8] == 1,
+          rare: r.length == 9 && r[8] >= 2
+              ? RareCoin.values[r[8].toInt() - 1]
+              : RareCoin.none,
         );
       }
     } else {
@@ -276,6 +295,7 @@ class PusherModel {
     double vz = 0,
     int prize = 0,
     bool mega = false,
+    RareCoin rare = RareCoin.none,
   }) {
     final body = world.createBody(
       BodyDef(
@@ -286,7 +306,7 @@ class PusherModel {
         fixedRotation: true,
       ),
     );
-    final coin = PusherCoin(body, value, z, vz, prize, mega);
+    final coin = PusherCoin(body, value, z, vz, prize, mega, rare);
     body.createFixture(
       FixtureDef(
         coin.isGoldBar
@@ -324,7 +344,20 @@ class PusherModel {
     balance--;
     drops++;
     // The chute does not rise with the pile. Airborne coins reserve their spot.
-    _coin(target, y, drops % 12 == 0 ? 5 : 1, z: dropHeight);
+    // One rare roll per paid drop: heart 0.2%, rainbow 1%.
+    final roll = _random();
+    final rare = roll < .002
+        ? RareCoin.heart
+        : roll < .012
+        ? RareCoin.rainbow
+        : RareCoin.none;
+    _coin(
+      target,
+      y,
+      rare == RareCoin.none && drops % 12 == 0 ? 5 : 1,
+      z: dropHeight,
+      rare: rare,
+    );
     soundEvents.add('insert');
     if (drops % 12 == 0) _spawnPrize();
     cooldown = .18;
@@ -405,7 +438,7 @@ class PusherModel {
     pendingLargeCoins = 0;
     pendingGoldBars = 0;
     boostCharge = pendingShowerCoins = pendingMegaCoins = 0;
-    turboRemaining = showerCooldown = 0;
+    turboRemaining = showerCooldown = rainbowRemaining = 0;
     lastPerk = null;
     dropBlockedReason = null;
     pusher.setTransform(Vector2(5, pusherY), 0);
@@ -431,6 +464,7 @@ class PusherModel {
       comboRemaining = math.max(0, comboRemaining - step);
       if (comboRemaining == 0) comboCoins = 0;
       cooldown = math.max(0, cooldown - step);
+      rainbowRemaining = math.max(0, rainbowRemaining - step);
       turboRemaining = math.max(0, turboRemaining - step);
       showerCooldown = math.max(0, showerCooldown - step);
       phase = (phase + step * (turboRemaining > 0 ? 3.2 : 1.6)) % (2 * math.pi);
@@ -451,6 +485,15 @@ class PusherModel {
                 : 'collect',
           );
           if (!side) {
+            if (c.rare == RareCoin.rainbow) {
+              rainbowRemaining = 60;
+              justRewards.add('Rainbow coin! Double earnings for 60 seconds');
+            }
+            if (c.rare == RareCoin.heart) {
+              // Filling the meter immediately spends it on the normal perk.
+              boostCharge = boostTarget - 1;
+              justRewards.add('Heart coin! Boost filled');
+            }
             if (c.prize > 0) {
               final id = prizeIds[c.prize - 1];
               collection[id] = (collection[id] ?? 0) + 1;
@@ -470,14 +513,15 @@ class PusherModel {
                 justRewards.add('10-coin combo! Gold bar worth 25 earned');
               }
             }
-            balance += c.value;
-            collected += c.value;
-            earned += c.value;
+            final payout = c.value * earningsMultiplier;
+            balance += payout;
+            collected += payout;
+            earned += payout;
             bonus++;
             if (bonus == 20) {
               bonus = 0;
-              balance += 10;
-              earned += 10;
+              balance += 10 * earningsMultiplier;
+              earned += 10 * earningsMultiplier;
               soundEvents.add('bonus');
             }
           }
@@ -664,6 +708,7 @@ class PusherModel {
     'pendingShowerCoins': pendingShowerCoins,
     'pendingMegaCoins': pendingMegaCoins,
     'turboRemaining': turboRemaining,
+    'rainbowRemaining': rainbowRemaining,
     'showerCooldown': showerCooldown,
     'lastPerk': lastPerk,
     'comboCoins': comboCoins,
@@ -681,7 +726,10 @@ class PusherModel {
           c.z,
           c.vz,
           c.prize,
-          if (c.isMegaCoin) 1,
+          if (c.isMegaCoin)
+            1
+          else if (c.rare != RareCoin.none)
+            c.rare.index + 1,
         ],
     ],
   };

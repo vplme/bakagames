@@ -118,7 +118,7 @@ class _PusherScreenState extends State<PusherScreen>
     if (!mounted) return;
     final model = _game!.model;
     final presentation =
-        '${model.boostCharge}:${model.boostLabel}:${model.lastPerk}';
+        '${model.boostCharge}:${model.boostLabel}:${model.lastPerk}:${model.rainbowRemaining.ceil()}';
     if (presentation != _boostPresentation) {
       _boostPresentation = presentation;
       setState(() {});
@@ -286,6 +286,7 @@ class _PusherScreenState extends State<PusherScreen>
   @override
   void dispose() {
     _audio.dispose();
+    _game?.disposeResources();
     _timer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -382,6 +383,15 @@ class _PusherScreenState extends State<PusherScreen>
                               'Boost charge: ${game.model.boostCharge} of ${PusherModel.boostTarget}',
                         ),
                       ),
+                      if (game.model.rainbowRemaining > 0)
+                        Text(
+                          'Rainbow ×2 · ${game.model.rainbowRemaining.ceil()}s',
+                          key: const Key('pusherRainbow'),
+                          style: const TextStyle(
+                            color: Colors.deepPurple,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       if (game.model.lastPerk != null)
                         Text(
                           game.model.lastPerk == 'Mega coin'
@@ -454,7 +464,7 @@ class _PusherScreenState extends State<PusherScreen>
                         title: const Text('Guide & collection'),
                         children: [
                           const Text(
-                            'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.\nBoost: fallen coins add 1 charge, animals add 4, including sides. At ${PusherModel.boostTarget}, get a random perk: a 40-coin shower, 10 seconds of turbo pushing, or a mega coin worth 25.',
+                            'Tap the machine to choose where to drop. The button repeats your last position.\nStack up to 3 coins. Front pays; sides lose. Blue coins pay 5. Rare rainbow coins double all tray earnings for 60 seconds; another refreshes the timer. Very rare heart coins fill the boost bar for an instant perk. Collect special coins at the front to activate them.\nCollect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.\nBoost: fallen coins add 1 charge, animals add 4, including sides. At ${PusherModel.boostTarget}, get a random perk: a 40-coin shower, 10 seconds of turbo pushing, or a mega coin worth 25.',
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
@@ -484,17 +494,32 @@ class _PusherScreenState extends State<PusherScreen>
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Center(
-                        child: AspectRatio(
-                          aspectRatio: 12 / 12.6,
-                          child: LayoutBuilder(
-                            builder: (context, boardConstraints) =>
-                                GestureDetector(
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top:
+                              24 +
+                              MediaQuery.textScalerOf(context).scale(16) *
+                                  (2 +
+                                      (game.model.lastPerk != null ? 1 : 0) +
+                                      (game.model.rainbowRemaining > 0
+                                          ? 1
+                                          : 0)),
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Portrait uses the available height; landscape
+                            // keeps the cabinet from becoming short and wide.
+                            final width = constraints.maxWidth
+                                .clamp(0.0, constraints.maxHeight * 12 / 12.6)
+                                .toDouble();
+                            return Center(
+                              child: SizedBox(
+                                width: width,
+                                height: constraints.maxHeight,
+                                child: GestureDetector(
                                   onTapDown: _paused
                                       ? null
                                       : (details) {
-                                          final width =
-                                              boardConstraints.maxWidth;
                                           _aim = aimFromBoard(
                                             details.localPosition.dx,
                                             width,
@@ -504,7 +529,9 @@ class _PusherScreenState extends State<PusherScreen>
                                         },
                                   child: GameWidget(game: game),
                                 ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       if (game.model.balance == 0)
@@ -706,7 +733,7 @@ class _PusherHomeState extends State<_PusherHome> {
             padding: EdgeInsets.all(28),
             child: Text(
               'Tap the machine to choose where to drop. The drop button repeats your last position.\n\n'
-              'Stack up to 3 coins. Front pays; sides lose. Blue coins pay 5.\n\n'
+              'Stack up to 3 coins. Front pays; sides lose. Blue coins pay 5. Rare rainbow coins double all tray earnings for 60 seconds; another refreshes the timer. Very rare heart coins fill the boost bar for an instant perk. Collect special coins at the front to activate them.\n\n'
               'Collect 5 coins within 1 second for a large coin (10); collect 10 for a gold bar (25). Push rewards into the tray to cash in.\nBoost: fallen coins add 1 charge, animals add 4, including sides. At ${PusherModel.boostTarget}, get a random perk: a 40-coin shower, 10 seconds of turbo pushing, or a mega coin worth 25.\n\n'
               'Unlock new toys every 250 lifetime coins. Push them into the front tray to keep them. Refills are always free.',
               style: TextStyle(fontSize: 16, height: 1.6),
