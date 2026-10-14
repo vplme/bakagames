@@ -24,14 +24,25 @@ int comparePusherDepth(PusherCoin a, PusherCoin b) {
   return depth != 0 ? depth : a.z.compareTo(b.z);
 }
 
+// Keep upright toy artwork proportional. Flat coins and their shadows follow
+// the table projection so their footprints stay aligned with the physical pile.
+void _keepObjectProportions(Canvas canvas, Offset anchor, double correction) {
+  canvas.translate(anchor.dx, anchor.dy);
+  canvas.scale(1, correction);
+  canvas.translate(-anchor.dx, -anchor.dy);
+}
+
 void paintCabinet(
   Canvas canvas,
   Size size,
   PusherModel model, {
   Map<String, Image> toys = const {},
-  void Function(Canvas canvas)? paintFalling,
+  void Function(Canvas canvas, double correction)? paintFalling,
 }) {
+  final correction = (size.width / 12) / (size.height / 12.6);
   canvas.save();
+  // The taller perspective must not paint over the screen header.
+  canvas.clipRect(Offset.zero & size);
   // The title lives in the screen header; use its former space for play.
   canvas.scale(size.width / 12, size.height / 12.6);
   canvas.translate(0, -2.4);
@@ -80,7 +91,7 @@ void paintCabinet(
           ..addText(text);
     canvas.save();
     canvas.translate(0, y);
-    canvas.scale(1 / textScale);
+    canvas.scale(1 / textScale, correction / textScale);
     canvas.drawParagraph(
       p.build()..layout(const ParagraphConstraints(width: 12 * textScale)),
       Offset.zero,
@@ -210,7 +221,7 @@ void paintCabinet(
   for (var y = .4; y < model.pusherY; y += .35) {
     canvas.drawLine(
       projectCoin(paddleLeft + .15, y, .61),
-      projectCoin(paddleRight - .15, y + .1, .61),
+      projectCoin(paddleRight - .15, y, .61),
       paint
         ..color = const Color(0x33734F2B)
         ..strokeWidth = .025,
@@ -231,7 +242,13 @@ void paintCabinet(
   }
   final sorted = [...model.coins]..sort(comparePusherDepth);
   for (final c in sorted) {
+    canvas.save();
     if (c.prize > 0) {
+      _keepObjectProportions(
+        canvas,
+        projectCoin(c.body.position.x, c.body.position.y, c.z),
+        correction,
+      );
       drawPrize(
         canvas,
         c.body.position.x,
@@ -247,8 +264,10 @@ void paintCabinet(
         c.z,
         c.value,
         mega: c.isMegaCoin,
+        rare: c.rare,
       );
     }
+    canvas.restore();
   }
   // The payout opening exposes the tabletop thickness and a lower tray.
   face(
@@ -296,7 +315,7 @@ void paintCabinet(
   label('Treasures land here', 12.45, .34, const Color(0xFFFFF5DF));
 
   // Falling objects pass behind the solid cabinet rails and tray lip.
-  paintFalling?.call(canvas);
+  paintFalling?.call(canvas, correction);
   for (final x in [-1.15, 10.85]) {
     face(
       [
@@ -425,6 +444,7 @@ void drawSolidCoin(
   double z,
   int value, {
   bool mega = false,
+  RareCoin rare = RareCoin.none,
 }) {
   if (value == 25 && !mega) {
     drawGoldBar(canvas, x, y, z);
@@ -445,6 +465,17 @@ void drawSolidCoin(
   );
   final paint = Paint();
   final blue = value == 5;
+  final rainbow = rare == RareCoin.rainbow;
+  const spectrum = [
+    Color(0xFFFF285B),
+    Color(0xFFFF8A19),
+    Color(0xFFFFE938),
+    Color(0xFF25E768),
+    Color(0xFF19DFFF),
+    Color(0xFF4261FF),
+    Color(0xFFC936FF),
+  ];
+  const spectrumStops = [0.0, .16, .33, .5, .67, .84, 1.0];
   final dark = blue ? const Color(0xFF267B8A) : const Color(0xFF98601D);
   final light = blue ? const Color(0xFFD6FFFF) : const Color(0xFFFFF1AF);
   final mid = blue ? const Color(0xFF65CDDA) : gold;
@@ -454,6 +485,7 @@ void drawSolidCoin(
     Rect.fromLTRB(rect.left, rect.center.dy, rect.right, base.center.dy),
     paint..color = dark,
   );
+  paint.shader = null;
   for (var i = 1; i < 8; i++) {
     final xx = rect.left + rect.width * i / 8;
     canvas.drawLine(
@@ -470,11 +502,39 @@ void drawSolidCoin(
       ..shader = Gradient.linear(
         rect.topLeft,
         rect.bottomRight,
-        [light, mid, dark],
-        [0, .55, 1],
+        rare == RareCoin.heart
+            ? const [Color(0xFFFFD5E5), Color(0xFFFA76AD), Color(0xFFAC3266)]
+            : [light, mid, dark],
+        const [0, .55, 1],
       ),
   );
   paint.shader = null;
+  if (rainbow) {
+    // Rainbow enamel inset into a raised metal rim. The side wall stays
+    // shaded and ridged so the face reads as a solid coin, not a flat token.
+    final inset = rect.deflate(.055 * scale);
+    canvas.drawOval(
+      inset,
+      paint
+        ..shader = Gradient.linear(
+          inset.centerLeft,
+          inset.centerRight,
+          spectrum,
+          spectrumStops,
+        ),
+    );
+    canvas.drawOval(
+      inset,
+      paint
+        ..shader = Gradient.linear(
+          inset.topLeft,
+          inset.bottomRight,
+          const [Color(0xAAFFFFFF), Color(0x00FFFFFF), Color(0x660F1238)],
+          const [0, .42, 1],
+        ),
+    );
+    paint.shader = null;
+  }
   canvas.drawOval(
     rect.deflate(.065 * scale),
     paint
@@ -485,17 +545,23 @@ void drawSolidCoin(
   canvas.drawOval(
     rect.deflate(.12 * scale),
     paint
-      ..color = dark
+      ..color = rainbow ? const Color(0x80532F21) : dark
       ..strokeWidth = .014,
   );
   paint.style = PaintingStyle.fill;
-  if (mega) {
+  if (mega || rare != RareCoin.none) {
     final builder =
         ParagraphBuilder(
             ParagraphStyle(fontSize: 20, textAlign: TextAlign.center),
           )
           ..pushStyle(TextStyle(color: dark, fontWeight: FontWeight.w800))
-          ..addText('25');
+          ..addText(
+            mega
+                ? '25'
+                : rare == RareCoin.heart
+                ? '♥'
+                : '×2',
+          );
     final label = builder.build()
       ..layout(const ParagraphConstraints(width: 64));
     canvas.save();
@@ -572,8 +638,9 @@ class _FallingCoin {
   final double x, y;
   final int value, prize;
   final bool mega;
+  final RareCoin rare;
   double age = 0;
-  _FallingCoin(this.x, this.y, this.value, this.prize, this.mega);
+  _FallingCoin(this.x, this.y, this.value, this.prize, this.mega, this.rare);
 }
 
 class PusherGame extends FlameGame {
@@ -583,24 +650,32 @@ class PusherGame extends FlameGame {
   final void Function(double dt, List<String> events)? onSounds;
   final List<_FallingCoin> _falling = [];
   final Map<String, Image> toys = {};
+  bool _resourcesDisposed = false;
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     for (final id in prizeIds) {
       final data = await rootBundle.load('assets/pusher/$id.webp');
       final codec = await instantiateImageCodec(data.buffer.asUint8List());
-      toys[id] = (await codec.getNextFrame()).image;
+      final image = (await codec.getNextFrame()).image;
       codec.dispose();
+      if (_resourcesDisposed) {
+        image.dispose();
+        return;
+      }
+      toys[id] = image;
     }
   }
 
-  @override
-  void onRemove() {
+  // A GameWidget may detach and remount this same game (including hot reload
+  // layout changes). onLoad runs only once, so retain sprites across removal.
+  // The owning screen releases them when the session actually ends.
+  void disposeResources() {
+    _resourcesDisposed = true;
     for (final image in toys.values) {
       image.dispose();
     }
     toys.clear();
-    super.onRemove();
   }
 
   PusherGame(this.model, this.onTick, this.reducedMotion, {this.onSounds});
@@ -631,6 +706,7 @@ class PusherGame extends FlameGame {
               entry.key.value,
               entry.key.prize,
               entry.key.isMegaCoin,
+              entry.key.rare,
             ),
           );
         }
@@ -651,14 +727,30 @@ class PusherGame extends FlameGame {
     );
   }
 
-  void _paintFalling(Canvas canvas) {
+  void _paintFalling(Canvas canvas, double correction) {
     for (final c in _falling) {
       final t = c.age / .4;
+      canvas.save();
       if (c.prize > 0) {
+        _keepObjectProportions(
+          canvas,
+          projectCoin(c.x, c.y, -t * 2),
+          correction,
+        );
         drawPrize(canvas, c.x, c.y, -t * 2, toys[prizeIds[c.prize - 1]]);
+        canvas.restore();
         continue;
       }
-      drawSolidCoin(canvas, c.x, c.y, -t * 1.8, c.value, mega: c.mega);
+      drawSolidCoin(
+        canvas,
+        c.x,
+        c.y,
+        -t * 1.8,
+        c.value,
+        mega: c.mega,
+        rare: c.rare,
+      );
+      canvas.restore();
     }
   }
 }

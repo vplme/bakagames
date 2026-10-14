@@ -6,6 +6,7 @@ import '../../shell/settings.dart';
 import '../shared/table_game.dart';
 import 'lantern_art.dart';
 import 'model.dart';
+import '../shared/table_audio.dart';
 import 'levels.dart';
 
 const _jade = lanternJade;
@@ -248,6 +249,7 @@ class MahjongScreen extends StatefulWidget {
 
 class _MahjongScreenState extends State<MahjongScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  late final audio = TableAudio(widget.settings, 'mahjong');
   late int deal = widget.initialDeal;
   late MahjongBoard board = MahjongBoard.deal(deal);
   late final AnimationController clock;
@@ -308,12 +310,14 @@ class _MahjongScreenState extends State<MahjongScreen>
   }
 
   void _menuChanged(bool open) {
+    if (open) audio.stop();
     setState(() => menuOpen = open);
     _syncClock();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) audio.stop();
     foreground = state == AppLifecycleState.resumed;
     _syncClock();
   }
@@ -321,6 +325,7 @@ class _MahjongScreenState extends State<MahjongScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    audio.dispose();
     clock.dispose();
     super.dispose();
   }
@@ -335,6 +340,8 @@ class _MahjongScreenState extends State<MahjongScreen>
   List<int> hint = [];
   late String notice = mahjongDifficulty(deal).advice;
   void reset({bool next = false}) => setState(() {
+    audio.stop();
+    audio.play('deal');
     if (next) deal = (deal + 1) % 30;
     clock.stop();
     clockStarted = false;
@@ -375,6 +382,14 @@ class _MahjongScreenState extends State<MahjongScreen>
           selected = null;
           return;
         }
+        audio.play(
+          board.won
+              ? 'win'
+              : board.lanternProgress > priorLanterns
+              ? 'milestone'
+              : 'reward${((board.tiles.length - board.remaining) * 4 ~/ board.tiles.length).clamp(0, 3)}',
+          reward: true,
+        );
         if (board.won) clock.stop();
         if (!reducedMotion) collections[collectionSerial++] = [selected!, id];
         selected = null;
@@ -387,6 +402,7 @@ class _MahjongScreenState extends State<MahjongScreen>
         notice = selected == null
             ? 'Find another free ${festivalNames[board.tiles[id].face]}.'
             : 'Different faces. Find this tile’s matching partner.';
+        audio.play('select');
         selected = id;
       }
     });
@@ -416,6 +432,7 @@ class _MahjongScreenState extends State<MahjongScreen>
       undo: () => setState(() {
         if (timedOut) return;
         collections.clear();
+        audio.play('undo');
         board.undo();
         selected = null;
         hint = [];
