@@ -6,6 +6,7 @@ import '../../shell/settings.dart';
 import '../shared/table_game.dart';
 import '../shared/cozy_art.dart';
 import 'model.dart';
+import '../shared/table_audio.dart';
 import 'moon_garden_art.dart';
 import '../../shell/settings_screen.dart';
 
@@ -242,6 +243,13 @@ class SolitaireScreen extends StatefulWidget {
 }
 
 class _SolitaireScreenState extends State<SolitaireScreen> {
+  late final audio = TableAudio(widget.settings, 'solitaire');
+  @override
+  void dispose() {
+    audio.dispose();
+    super.dispose();
+  }
+
   SolitaireBoard board = SolitaireBoard.deal();
   CardSource? selected;
   int? glowingFoundation;
@@ -250,6 +258,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   String notice =
       'Tap a card, then its destination. The moon keeps one card safe.';
   void reset() => setState(() {
+    audio.stop();
+    audio.play('deal');
     board = SolitaireBoard.deal();
     glowingFoundation = null;
     selected = null;
@@ -258,7 +268,24 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   });
   void tap(int pile, [int? index]) {
     final cards = board.pile(pile);
+    final hiddenBefore = board.hidden.fold<int>(0, (a, b) => a + b);
     if (selected != null && board.move(selected!, pile)) {
+      final revealed =
+          board.hidden.fold<int>(0, (a, b) => a + b) < hiddenBefore;
+      audio.play(
+        board.won
+            ? 'win'
+            : pile >= 9
+            ? (cards.length == 13
+                  ? 'milestone'
+                  : 'reward${((cards.length - 1) ~/ 4).clamp(0, 3)}')
+            : revealed
+            ? 'reward0'
+            : pile == 8
+            ? 'hint'
+            : 'move',
+        reward: board.won || pile >= 9 || revealed,
+      );
       glowingFoundation = pile >= 9 ? pile : null;
       foundationPulse++;
       widget.settings.hapticTap();
@@ -276,6 +303,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         selected = null;
         notice = 'Selection cleared.';
       } else if (board.cards(source).isNotEmpty) {
+        audio.play('select');
         selected = source;
         notice =
             '${board.cards(source).first.label} selected. Tap a column, foundation, or empty moon pocket.';
@@ -287,6 +315,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void hint() => setState(() {
+    audio.play('hint');
     final move = board.hint;
     if (move == null) {
       selected = null;
@@ -360,6 +389,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       status: '${board.gathered}/52 stars',
       deal: 0,
       numberedDeals: false,
+      onMenuChanged: (open) {
+        if (open) audio.stop();
+      },
       moves: board.moves,
       won: board.won,
       canUndo: board.canUndo,
@@ -370,6 +402,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       next: reset,
       hint: hint,
       undo: () => setState(() {
+        audio.play('undo');
         board.undo();
         glowingFoundation = null;
         selected = null;
@@ -439,6 +472,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                           key: const Key('solitaireStock'),
                           onTap: () {
                             if (board.draw()) {
+                              audio.play(board.waste.isEmpty ? 'deal' : 'draw');
                               widget.settings.hapticTap();
                               setState(() {
                                 selected = null;

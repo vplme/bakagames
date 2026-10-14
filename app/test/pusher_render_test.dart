@@ -14,8 +14,8 @@ void main() {
       textDirection: TextDirection.ltr,
       child: SizedBox(width: 360, height: 640, child: GameWidget(game: game)),
     );
-    await tester.pumpWidget(board());
     await tester.runAsync(() async {
+      await tester.pumpWidget(board());
       await game.toBeLoaded();
     });
     await tester.pump();
