@@ -109,6 +109,13 @@ class MergefrontAudio {
       }
       await _effect!.play(
         AssetSource('mergefront/$sound.wav'),
+        // Music owns audio focus. Effects requesting the default GAIN focus
+        // can stop the music player on Android as soon as gameplay starts.
+        ctx: AudioContext(
+          android: const AudioContextAndroid(
+            audioFocus: AndroidAudioFocus.none,
+          ),
+        ),
         volume: (repetitive ? .10 : .36) + now.millisecond % 4 * .01,
       );
       if (!repetitive && kind != 'preview' && kind != 'ui') {
